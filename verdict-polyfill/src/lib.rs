@@ -140,14 +140,6 @@ pub open spec fn spec_option_ok_or<T, E>(option: Option<T>, err: E) -> Result<T,
     }
 }
 
-#[verifier::when_used_as_spec(spec_option_ok_or)]
-#[verifier::external_fn_specification]
-pub fn option_ok_or<T, E>(option: Option<T>, err: E) -> (res: Result<T, E>)
-    ensures res == spec_option_ok_or(option, err),
-{
-    option.ok_or(err)
-}
-
 #[verifier::inline]
 pub open spec fn spec_result_or<T, E, E2>(result: Result<T, E>, default: Result<T, E2>) -> Result<T, E2>
 {

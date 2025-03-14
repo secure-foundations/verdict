@@ -8,18 +8,7 @@ use syn_verus::parse::{Parse, ParseStream};
 use syn_verus::punctuated::Punctuated;
 use syn_verus::spanned::Spanned;
 use syn_verus::{
-    parse_macro_input, AngleBracketedGenericArguments,
-    Arm, BigAnd, BigOr, BinOp, Block, Ensures, Error,
-    Expr, ExprBinary, ExprBlock, ExprCall, ExprCast, ExprClosure,
-    ExprField, ExprIf, ExprLit, ExprMatch, ExprMatches, ExprMethodCall,
-    ExprParen, ExprPath, ExprReference, ExprTuple, ExprUnary,
-    Field, FieldPat, Fields, FieldsNamed, FieldsUnnamed, FnArg,
-    FnArgKind, FnMode, GenericArgument, Ident, Index, Item, ItemEnum,
-    ItemFn, ItemMod, ItemStruct, Lit, LitBool, LitStr, Local, MatchesOpExpr,
-    MatchesOpToken, Pat, PatIdent, PatPath, PatReference, PatStruct, PatTuple,
-    PatTupleStruct, PatType, PatWild, Path, PathArguments, PathSegment,
-    Publish, ReturnType, Signature, Specification, Stmt, Type, TypePath,
-    TypeReference, UnOp, UseRename, UseTree, Variant, Visibility,
+    parse_macro_input, AngleBracketedGenericArguments, Arm, BigAnd, BigAndExpr, BigOr, BigOrExpr, BinOp, Block, Ensures, Error, Expr, ExprBinary, ExprBlock, ExprCall, ExprCast, ExprClosure, ExprField, ExprIf, ExprLit, ExprMatch, ExprMatches, ExprMethodCall, ExprParen, ExprPath, ExprReference, ExprTuple, ExprUnary, Field, FieldPat, Fields, FieldsNamed, FieldsUnnamed, FnArg, FnArgKind, FnMode, GenericArgument, Ident, Index, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, Lit, LitBool, LitStr, Local, LocalInit, MatchesOpExpr, MatchesOpToken, Pat, PatIdent, PatPath, PatReference, PatStruct, PatTuple, PatTupleStruct, PatType, PatWild, Path, PathArguments, PathSegment, Publish, ReturnType, Signature, SignatureSpec, Specification, Stmt, Type, TypePath, TypeReference, UnOp, UseRename, UseTree, Variant, Visibility
 };
 
 
@@ -235,7 +224,6 @@ fn new_expr_ref(expr: Expr) -> Expr {
     Expr::Reference(ExprReference {
         attrs: Vec::new(),
         and_token: Default::default(),
-        raw: Default::default(),
         mutability: None,
         // TODO: is paren necessary?
         expr: Box::new(Expr::Paren(ExprParen {
@@ -658,13 +646,10 @@ fn compile_pattern(ctx: &Context, local: &mut LocalContext, pat: &Pat) -> Result
         Pat::TupleStruct(pat_tuple_struct) =>
             Ok(Pat::TupleStruct(PatTupleStruct {
                 path: compile_path(ctx, &pat_tuple_struct.path)?,
-                pat: PatTuple {
-                    elems: pat_tuple_struct.pat.elems
-                        .iter()
-                        .map(|pat| compile_pattern(ctx, local, pat))
-                        .collect::<Result<_, Error>>()?,
-                    ..pat_tuple_struct.pat.clone()
-                },
+                elems: pat_tuple_struct.elems
+                    .iter()
+                    .map(|pat| compile_pattern(ctx, local, pat))
+                    .collect::<Result<_, Error>>()?,
                 ..pat_tuple_struct.clone()
             })),
 
@@ -969,7 +954,11 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
             Ok(Expr::BigAnd(BigAnd {
                 exprs: big_and.exprs
                     .iter()
-                    .map(|(tok, expr)| Ok((tok.clone(), Box::new(compile_expr(ctx, local, expr)?))))
+                    .map(|big_and|
+                        Ok(BigAndExpr {
+                            expr: Box::new(compile_expr(ctx, local, &big_and.expr)?),
+                            ..big_and.clone()
+                        }))
                     .collect::<Result<_, Error>>()?,
             })),
 
@@ -977,7 +966,11 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
             Ok(Expr::BigOr(BigOr {
                 exprs: big_or.exprs
                     .iter()
-                    .map(|(tok, expr)| Ok((tok.clone(), Box::new(compile_expr(ctx, local, expr)?))))
+                    .map(|big_or|
+                        Ok(BigOrExpr {
+                            expr: Box::new(compile_expr(ctx, local, &big_or.expr)?),
+                            ..big_or.clone()
+                        }))
                     .collect::<Result<_, Error>>()?,
             })),
 
@@ -1135,7 +1128,7 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
                             block: Block {
                                 brace_token: Default::default(),
                                 stmts: vec![
-                                    Stmt::Expr(compile_expr(ctx, &local, rhs)?),
+                                    Stmt::Expr(compile_expr(ctx, &local, rhs)?, None),
                                 ],
                             }
                         }))
@@ -1221,12 +1214,15 @@ fn compile_block(ctx: &Context, local: &LocalContext, block: &Block) -> Result<B
             Stmt::Local(binding) => {
                 let (var, _) = get_simple_pat(&binding.pat)?;
 
-                let Some((tok, expr)) = &binding.init else {
+                let Some(local_init) = &binding.init else {
                     return Err(Error::new_spanned(stmt, "unsupported let statement without initializer"));
                 };
 
                 stmts.push(Stmt::Local(Local {
-                    init: Some((tok.clone(), Box::new(compile_expr(ctx, &local, expr)?))),
+                    init: Some(LocalInit {
+                        expr: Box::new(compile_expr(ctx, &local, &local_init.expr)?),
+                        ..local_init.clone()
+                    }),
                     ..binding.clone()
                 }));
 
@@ -1234,7 +1230,8 @@ fn compile_block(ctx: &Context, local: &LocalContext, block: &Block) -> Result<B
                 local.vars.insert(var.to_string(), None);
             }
 
-            Stmt::Expr(expr) => stmts.push(Stmt::Expr(compile_expr(ctx, &local, expr)?)),
+            Stmt::Expr(expr, semi_token) =>
+                stmts.push(Stmt::Expr(compile_expr(ctx, &local, expr)?, semi_token.clone())),
 
             _ => return Err(Error::new_spanned(stmt, "unsupported statement")),
         }
@@ -1331,14 +1328,16 @@ fn compile_signature(ctx: &Context, sig: &Signature) -> Result<Signature, Error>
         inputs: params,
         output: return_type,
 
-        ensures: Some(Ensures {
-            attrs: Vec::new(),
-            token: Default::default(),
-            exprs: Specification {
-                exprs: Punctuated::from_iter([ensure_expr]),
-            },
-        }),
-
+        spec: SignatureSpec {
+            ensures: Some(Ensures {
+                attrs: Vec::new(),
+                token: Default::default(),
+                exprs: Specification {
+                    exprs: Punctuated::from_iter([ensure_expr]),
+                },
+            }),
+            ..sig.spec.clone()
+        },
         ..sig.clone()
     })
 }
@@ -1378,19 +1377,20 @@ fn compile_spec_fn(ctx: &Context, item_fn: &ItemFn, trace: bool) -> Result<ItemF
                         ident: Ident::new("_res", item_fn.sig.ident.span()),
                         subpat: None,
                     }),
-                    init: Some((
-                        Default::default(),
-                        Box::new(Expr::Block(ExprBlock {
+                    init: Some(LocalInit {
+                        eq_token: Default::default(),
+                        expr: Box::new(Expr::Block(ExprBlock {
                             attrs: Vec::new(),
                             label: None,
                             block: body,
                         })),
-                    )),
+                        diverge: None,
+                    }),
                     semi_token: Default::default(),
                 }),
 
                 // rspec_trace_result("fn_name", _res)
-                Stmt::Semi(expr_call!(
+                Stmt::Expr(expr_call!(
                     expr_path![seg!("verdict_rspec_lib"), seg!("rspec_trace_result")],
                     Expr::Lit(ExprLit {
                         attrs: Vec::new(),
@@ -1399,14 +1399,13 @@ fn compile_spec_fn(ctx: &Context, item_fn: &ItemFn, trace: bool) -> Result<ItemF
                     Expr::Reference(ExprReference {
                         attrs: Vec::new(),
                         and_token: Default::default(),
-                        raw: Default::default(),
                         mutability: None,
                         expr: Box::new(expr_path![seg!("_res")]),
                     }),
-                ), Default::default()),
+                ), Some(Default::default())),
 
                 // _res
-                Stmt::Expr(expr_path!(seg!("_res"))),
+                Stmt::Expr(expr_path!(seg!("_res")), None),
             ],
         }
     } else {

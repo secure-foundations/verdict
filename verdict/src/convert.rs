@@ -259,7 +259,7 @@ impl policy::Certificate {
         {
             policy::ExecExtension {
                 oid: Self::oid_to_string(&ext.id),
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
             }
         })
     }
@@ -462,7 +462,7 @@ impl policy::AuthorityKeyIdentifier {
     {
         if let ExtensionParamValue::AuthorityKeyIdentifier(akid) = &ext.param {
             Ok(policy::ExecAuthorityKeyIdentifier {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
                 key_id: match akid.key_id {
                     OptionDeep::Some(key_id) => Some(hash::to_hex_upper(key_id)),
                     OptionDeep::None => None,
@@ -499,7 +499,7 @@ impl policy::SubjectKeyIdentifier {
     {
         if let ExtensionParamValue::SubjectKeyIdentifier(skid) = &ext.param {
             Ok(policy::ExecSubjectKeyIdentifier {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
                 key_id: hash::to_hex_upper(skid),
             })
         } else {
@@ -533,7 +533,7 @@ impl policy::ExtendedKeyUsage {
             assert(usage_types.deep_view() =~= usages@.map_values(|oid| Self::spec_oid_to_key_usage_type(oid)));
 
             Ok(policy::ExecExtendedKeyUsage {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
                 usages: usage_types,
             })
         } else {
@@ -606,7 +606,7 @@ impl policy::BasicConstraints {
     {
         if let ExtensionParamValue::BasicConstraints(bc) = &ext.param {
             Ok(policy::ExecBasicConstraints {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
                 is_ca: bc.is_ca,
                 path_len: match bc.path_len {
                     OptionDeep::Some(len) => Some(len as i64),
@@ -644,7 +644,7 @@ impl policy::KeyUsage {
     {
         if let ExtensionParamValue::KeyUsage(usage) = &ext.param {
             Ok(policy::ExecKeyUsage {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
                 digital_signature: BitStringValue::has_bit(usage, 0),
                 non_repudiation: BitStringValue::has_bit(usage, 1),
                 key_encipherment: BitStringValue::has_bit(usage, 2),
@@ -679,7 +679,7 @@ impl policy::SubjectAltName {
     {
         if let ExtensionParamValue::SubjectAltName(names) = &ext.param {
             Ok(policy::ExecSubjectAltName {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
                 names: policy::GeneralName::from_names(names),
             })
         } else {
@@ -739,7 +739,7 @@ impl policy::NameConstraints {
             });
 
             Ok(policy::ExecNameConstraints {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
                 permitted,
                 excluded,
             })
@@ -778,7 +778,7 @@ impl policy::CertificatePolicies {
                 policy::Certificate::spec_oid_to_string(policy.policy_id)));
 
             Ok(policy::ExecCertificatePolicies {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
                 policies: policy_oid_strings,
             })
         } else {
@@ -804,7 +804,7 @@ impl policy::AuthorityInfoAccess {
     {
         if let ExtensionParamValue::AuthorityInfoAccess(..) = &ext.param {
             Ok(policy::ExecAuthorityInfoAccess {
-                critical: ext.critical.to_opt(),
+                critical: PolyfillClone::clone(&ext.critical).to_opt(),
             })
         } else {
             Err(ValidationError::UnexpectedExtParam)

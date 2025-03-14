@@ -9,3 +9,6 @@ builtin = { path = "../deps/verus/source/builtin" }
 vstd = { path = "../deps/verus/source/vstd" }
 verdict-rspec = { path = "../verdict-rspec" }
 verdict-rspec-lib = { path = "../verdict-rspec-lib" }
+
+[package.metadata.verus]
+verify = true

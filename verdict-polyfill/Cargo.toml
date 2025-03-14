@@ -7,3 +7,6 @@ edition = "2021"
 builtin_macros = { path = "../deps/verus/source/builtin_macros" }
 builtin = { path = "../deps/verus/source/builtin" }
 vstd = { path = "../deps/verus/source/vstd" }
+
+[package.metadata.verus]
+verify = true

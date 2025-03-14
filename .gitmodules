@@ -6,3 +6,5 @@
 	path = deps/libcrux
 	url = https://github.com/zhengyao-lin/libcrux.git
 	branch = main
+[submodule "deps/verus"]
+	branch = x509

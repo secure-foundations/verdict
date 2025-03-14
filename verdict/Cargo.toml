@@ -22,5 +22,5 @@ verdict-rspec-lib = { path = "../verdict-rspec-lib" }
 default = []
 aws-lc = []
 
-[verus]
-extra_flags = "--no-lifetime"
+[package.metadata.verus]
+verify = true
