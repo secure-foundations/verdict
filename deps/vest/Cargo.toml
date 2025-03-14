@@ -17,3 +17,6 @@ extra_args = "--crate-type=lib --expand-errors --test"
 
 [package.metadata.verus]
 verify = true
+
+[lints]
+workspace = true

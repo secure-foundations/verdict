@@ -12,3 +12,6 @@ verdict-rspec-lib = { path = "../verdict-rspec-lib" }
 
 [package.metadata.verus]
 verify = true
+
+[lints]
+workspace = true

@@ -7,7 +7,7 @@ For all evaluations, see [https://github.com/verdict-x509/verdict-bench](https:/
 ## Dependencies
 
 Build dependencies in Ubuntu 24.04 (other systems are similar):
-- Cargo >= 1.76.0
+- Cargo
 - build-essential, git, unzip, curl
 
 ## Usage

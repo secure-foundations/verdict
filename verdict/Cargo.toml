@@ -24,3 +24,6 @@ aws-lc = []
 
 [package.metadata.verus]
 verify = true
+
+[lints]
+workspace = true
