@@ -14,3 +14,6 @@ vstd = { path = "../verus/source/vstd" }
 
 [package.metadata.verus.ide]
 extra_args = "--crate-type=lib --expand-errors --test"
+
+[package.metadata.verus]
+verify = true

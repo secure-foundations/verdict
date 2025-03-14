@@ -13,6 +13,29 @@ pub trait SpecIso {
     /// The destination type of the isomorphism.
     type Dst: SpecFrom<Self::Src>;
 
+    /// One direction of the isomorphism.
+    proof fn spec_iso(s: Self::Src)
+        ensures
+        Self::Src::spec_from(Self::Dst::spec_from(s)) == s,
+    ;
+
+    /// The other direction of the isomorphism.
+    proof fn spec_iso_rev(s: Self::Dst)
+        ensures
+            Self::Dst::spec_from(Self::Src::spec_from(s)) == s,
+    ;
+}
+
+/// Similar fix to https://github.com/secure-foundations/vest/issues/16
+pub trait SpecIsoFn: SpecIso {
+    /// Applies the isomorphism to the source type.
+    spec fn spec_apply(s: Self::Src) -> Self::Dst;
+
+    /// Applies the reverse isomorphism to the destination type.
+    spec fn spec_rev_apply(s: Self::Dst) -> Self::Src;
+}
+
+impl<T: SpecIso> SpecIsoFn for T {
     /// Applies the isomorphism to the source type.
     open spec fn spec_apply(s: Self::Src) -> Self::Dst {
         Self::Dst::spec_from(s)
@@ -22,18 +45,6 @@ pub trait SpecIso {
     open spec fn spec_rev_apply(s: Self::Dst) -> Self::Src {
         Self::Src::spec_from(s)
     }
-
-    /// One direction of the isomorphism.
-    proof fn spec_iso(s: Self::Src)
-        ensures
-            Self::spec_rev_apply(Self::spec_apply(s)) == s,
-    ;
-
-    /// The other direction of the isomorphism.
-    proof fn spec_iso_rev(s: Self::Dst)
-        ensures
-            Self::spec_apply(Self::spec_rev_apply(s)) == s,
-    ;
 }
 
 /// All isomorphisms to be used in [`Mapped`] combinator must implement this trait.
@@ -61,8 +72,6 @@ pub trait Iso: View where
         ensures
             res@ == Self::V::spec_apply(s@),
     {
-        assert(Self::V::spec_apply(s@) == <Self::Dst<'_> as View>::V::spec_from(s@))
-            by (compute_only);
         Self::Dst::ex_from(s)
     }
 
@@ -71,8 +80,6 @@ pub trait Iso: View where
         ensures
             res@ == Self::V::spec_rev_apply(s@),
     {
-        assert(Self::V::spec_rev_apply(s@) == <Self::Src<'_> as View>::V::spec_from(s@))
-            by (compute_only);
         Self::Src::ex_from(s)
     }
 }
@@ -216,6 +223,41 @@ pub trait SpecTryFromInto {
     /// The destination type
     type Dst: SpecTryFrom<Self::Src>;
 
+    /// One direction of the isomorphism when the conversion is successful.
+    proof fn spec_iso(s: Self::Src)
+        ensures
+            Self::Dst::spec_try_from(s) matches Ok(v) ==> {
+                &&& Self::Src::spec_try_from(v) is Ok
+                &&& Self::Src::spec_try_from(v) matches Ok(s_) && s == s_
+            },
+    ;
+
+    /// The other direction of the isomorphism when the conversion is successful.
+    proof fn spec_iso_rev(s: Self::Dst)
+        ensures
+            Self::Src::spec_try_from(s) matches Ok(v) ==> {
+                &&& Self::Dst::spec_try_from(v) is Ok
+                &&& Self::Dst::spec_try_from(v) matches Ok(s_) && s == s_
+            },
+    ;
+}
+
+/// Similar fix to https://github.com/secure-foundations/vest/issues/16
+pub trait SpecTryFromIntoFn: SpecTryFromInto {
+    /// Applies the faillible conversion to the source type.
+    spec fn spec_apply(s: Self::Src) -> Result<
+        Self::Dst,
+        <Self::Dst as SpecTryFrom<Self::Src>>::Error,
+    >;
+
+    /// Applies the reverse faillible conversion to the destination type.
+    spec fn spec_rev_apply(s: Self::Dst) -> Result<
+        Self::Src,
+        <Self::Src as SpecTryFrom<Self::Dst>>::Error,
+    >;
+}
+
+impl<T: SpecTryFromInto> SpecTryFromIntoFn for T {
     /// Applies the faillible conversion to the source type.
     open spec fn spec_apply(s: Self::Src) -> Result<
         Self::Dst,
@@ -231,24 +273,6 @@ pub trait SpecTryFromInto {
     > {
         Self::Src::spec_try_from(s)
     }
-
-    /// One direction of the isomorphism when the conversion is successful.
-    proof fn spec_iso(s: Self::Src)
-        ensures
-            Self::spec_apply(s) matches Ok(v) ==> {
-                &&& Self::spec_rev_apply(v) is Ok
-                &&& Self::spec_rev_apply(v) matches Ok(s_) && s == s_
-            },
-    ;
-
-    /// The other direction of the isomorphism when the conversion is successful.
-    proof fn spec_iso_rev(s: Self::Dst)
-        ensures
-            Self::spec_rev_apply(s) matches Ok(v) ==> {
-                &&& Self::spec_apply(v) is Ok
-                &&& Self::spec_apply(v) matches Ok(s_) && s == s_
-            },
-    ;
 }
 
 /// Faillible version of [`Iso`].
@@ -281,8 +305,6 @@ pub trait TryFromInto: View where
             },
             res matches Err(e) ==> Self::V::spec_apply(s@) is Err,
     {
-        assert(Self::V::spec_apply(s@) == <Self::Dst<'_> as View>::V::spec_try_from(s@))
-            by (compute_only);
         Self::Dst::ex_try_from(s)
     }
 
@@ -298,8 +320,6 @@ pub trait TryFromInto: View where
             },
             res matches Err(e) ==> Self::V::spec_rev_apply(s@) is Err,
     {
-        assert(Self::V::spec_rev_apply(s@) == <Self::Src<'_> as View>::V::spec_try_from(s@))
-            by (compute_only);
         Self::Src::ex_try_from(s)
     }
 }
