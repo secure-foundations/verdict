@@ -1,4 +1,4 @@
-[submodule "verus"]
+[submodule "deps/verus"]
 	path = deps/verus
 	url = https://github.com/zhengyao-lin/verus.git
 	branch = x509
@@ -6,5 +6,3 @@
 	path = deps/libcrux
 	url = https://github.com/zhengyao-lin/libcrux.git
 	branch = main
-[submodule "deps/verus"]
-	branch = x509
