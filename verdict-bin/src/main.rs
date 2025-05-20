@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 mod error;
 mod utils;
 mod ct_logs;

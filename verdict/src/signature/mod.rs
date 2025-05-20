@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 #[cfg(feature = "aws-lc")]
 pub mod ecdsa_aws_lc;
 #[cfg(feature = "aws-lc")]

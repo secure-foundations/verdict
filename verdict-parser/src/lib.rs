@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 mod common;
 pub mod asn1;
 pub mod x509;
