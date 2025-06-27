@@ -13,16 +13,23 @@ pub use super::*;
 
 verus! {
 
+/// Common trait for all policies (e.g. [`super::chrome::ChromePolicy`])
 pub trait Policy: Send + Sync {
     /// User-defined issuing relation without checking signature
     spec fn spec_likely_issued(&self, issuer: Certificate, subject: Certificate) -> bool;
 
+    /// A policy-dependent predicate to check if `subject`
+    /// is likely issued by `issuer` without signature checking.
     fn likely_issued(&self, issuer: &ExecCertificate, subject: &ExecCertificate) -> (res: bool)
         ensures res == self.spec_likely_issued(issuer.deep_view(), subject.deep_view());
 
     /// User-defined chain/path validation
     spec fn spec_valid_chain(&self, chain: Seq<Certificate>, task: Task) -> bool;
 
+    /// A policy-specific predicate to check if a certificate chain is
+    /// considered valid with the provided [`ExecTask`], provided that
+    /// for each `i`, `chain[i]` is issued by `chain[i + 1]`,
+    /// and `chain.last()` is a trusted root certificate.
     fn valid_chain(&self, chain: &Vec<&ExecCertificate>, task: &ExecTask) -> (res: bool)
         ensures res.deep_view() == self.spec_valid_chain(chain.deep_view(), task.deep_view());
 }

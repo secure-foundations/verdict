@@ -4,6 +4,7 @@ use crate::policy::ExecPolicyError;
 
 verus! {
 
+/// Errors when validating a certificate chain
 #[derive(Debug)]
 pub enum ValidationError {
     IntegerOverflow,

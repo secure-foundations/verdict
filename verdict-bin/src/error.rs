@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use std::sync::mpsc::{RecvError, SendError};
 
-use verdict::error::{ValidationError, ParseError as X509ParseError};
+use verdict::{ValidationError, ParseError as X509ParseError};
 
 #[derive(Error, Debug)]
 pub enum Error {

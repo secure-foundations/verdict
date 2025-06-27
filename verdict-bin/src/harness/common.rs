@@ -1,7 +1,7 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout};
 
-use verdict::policy::{ExecTask, ExecPurpose};
+use verdict::{ExecTask, ExecPurpose};
 use clap::{Parser, ValueEnum};
 
 use crate::error::*;

@@ -1,4 +1,4 @@
-use verdict::policy::{ExecPurpose, ExecTask};
+use verdict::{ExecPurpose, ExecTask};
 use clap::Parser;
 
 use crate::error::*;

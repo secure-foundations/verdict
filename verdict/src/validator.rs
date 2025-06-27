@@ -41,10 +41,12 @@ pub open spec fn spec_validate_x509_base64<P: Policy>(
     }.valid()
 }
 
-/// An implementation for `spec_validate_x509_base64`
-/// Note that it's recommended to cache the result of creating
-/// a `RootStore` and `Validator` for better performance without
-/// processing roots every time.
+/// Validates a certificate chain against a set of
+/// trusted root certificates, all represented in
+/// ASN.1 DER (encoded in Base64).
+/// 
+/// A [`Policy`] also needs to be specified
+/// along with a [`ExecTask`] to be performed
 pub fn validate_x509_base64<P: Policy>(
     roots_base64: &Vec<Vec<u8>>,
     chain_base64: &Vec<Vec<u8>>,
@@ -139,6 +141,17 @@ impl<P: Policy> Query<P> {
     }
 }
 
+/// A formally verified X.509 certificate validation engine
+/// that uses the policies specified by `P`.
+/// 
+/// Initialize from [`Validator::from_parsed_roots`] or
+/// [`Validator::from_root_store`], and then use
+/// [`Validator::validate_base64`]/[`Validator::validate_der`]/[`Validator::validate`]
+/// to (parse and) validate certificates.
+/// 
+/// **NOTE:** please do not use [`Validator`]'s fields
+/// directly, as they are only public due to how the
+/// Verus proof is currently structured.
 pub struct Validator<'a, P: Policy> {
     pub policy: P,
     pub roots: VecDeep<CertificateValue<'a>>,
@@ -183,7 +196,7 @@ impl<'a, 'b, 'c> ValidatorCache<'a, 'b, 'c> {
 }
 
 impl<'a, P: Policy> Validator<'a, P> {
-    /// Initialize a validator struct from parsed root certificates
+    /// Initializes a [`Validator`] from parsed root certificates.
     #[verifier::loop_isolation(false)]
     pub fn from_parsed_roots(policy: P, roots: VecDeep<CertificateValue<'a>>) -> (res: Result<Self, ValidationError>)
         ensures
@@ -229,7 +242,7 @@ impl<'a, P: Policy> Validator<'a, P> {
         Ok(Validator { policy, roots, roots_rsa_cache, roots_abs_cache })
     }
 
-    /// Initialize a validator from a root store
+    /// Initializes a [`Validator`] from a [`RootStore`].
     pub fn from_root_store(policy: P, store: &'a RootStore) -> (res: Result<Self, ValidationError>)
         ensures
             res matches Ok(res) ==> {
@@ -587,9 +600,9 @@ impl<'a, P: Policy> Validator<'a, P> {
         })
     }
 
-    /// Validate a leaf certificate (bundle[0]) against
-    /// a task and try to build a valid chain through
-    /// the `bundle` of intermediate certificates
+    /// Parses the given chain of parsed certificates,
+    /// and then validates the chain for the given `task`,
+    /// where `bundle[0]` is the leaf certificate.
     #[verifier::loop_isolation(false)]
     #[verifier::exec_allows_no_decreases_clause]
     pub fn validate(
@@ -736,7 +749,9 @@ impl<'a, P: Policy> Validator<'a, P> {
         }
     }
 
-    /// Same as `validate`, but parses certificates from DER
+    /// Parses the given chain of certificates from ASN.1 DER,
+    /// and then validates the chain for the given `task`,
+    /// where `bundle[0]` is the leaf certificate.
     pub fn validate_der(&self, bundle: &Vec<Vec<u8>>, task: &policy::ExecTask) -> (res: Result<bool, ValidationError>)
         requires
             self.wf(),
@@ -768,7 +783,9 @@ impl<'a, P: Policy> Validator<'a, P> {
         self.validate(&bundle_parsed, task)
     }
 
-    /// Same as `validate`, but parses certificates from Base64
+    /// Parses the given chain of certificates from Base64-encoded ASN.1 DER,
+    /// and then validates the chain for the given `task`,
+    /// where `bundle[0]` is the leaf certificate.
     pub fn validate_base64(&self, bundle: &Vec<Vec<u8>>, task: &policy::ExecTask) -> (res: Result<bool, ValidationError>)
         requires
             self.wf(),
@@ -806,17 +823,22 @@ impl<'a, P: Policy> Validator<'a, P> {
     }
 }
 
+/// A collection of trusted root certificates
 pub struct RootStore {
     /// DER encodings of all root certificates
+    /// **NOTE:** please do not use this field as it is
+    /// only public due to how the Verus proof is
+    /// currently structured.
     pub roots_der: Vec<Vec<u8>>,
 }
 
 impl RootStore {
+    /// Creates a [`RootStore`] from a list of ASN.1 DER-encoded root certificates.
     pub fn from_owned_der(roots_der: Vec<Vec<u8>>) -> RootStore {
         RootStore { roots_der }
     }
 
-    /// Creates a root store from base64 encodings of root certificates
+    /// Creates a [`RootStore`] from a list of root certificates in Base64-encoded ASN.1 DER format.
     pub fn from_base64(roots_base64: &Vec<Vec<u8>>) -> (res: Result<RootStore, ParseError>)
         ensures
             res matches Ok(res) ==> {

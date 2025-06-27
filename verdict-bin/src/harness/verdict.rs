@@ -5,9 +5,10 @@ use std::time::Instant;
 
 use clap::ValueEnum;
 
-use verdict::policy::{self, Policy, ExecTask};
-use verdict::validator::{RootStore, Validator};
-use verdict::parser::{parse_x509_der, decode_base64};
+use verdict::{
+    ChromePolicy, FirefoxPolicy, OpenSSLPolicy,
+    Policy, ExecTask, RootStore, Validator, parse_x509_der, decode_base64,
+};
 
 use crossbeam::channel;
 use crossbeam::channel::Receiver;
@@ -102,11 +103,11 @@ impl Harness for VerdictHarness {
             handle: Some(thread::spawn(move ||
                 match policy_name {
                     VerdictPolicyName::Chrome =>
-                        VerdictInstance::worker(timestamp, roots_base64, policy::ChromePolicy::default(), rx_job, tx_res, debug),
+                        VerdictInstance::worker(timestamp, roots_base64, ChromePolicy::default(), rx_job, tx_res, debug),
                     VerdictPolicyName::Firefox =>
-                        VerdictInstance::worker(timestamp, roots_base64, policy::FirefoxPolicy::default(), rx_job, tx_res, debug),
+                        VerdictInstance::worker(timestamp, roots_base64, FirefoxPolicy::default(), rx_job, tx_res, debug),
                     VerdictPolicyName::OpenSSL =>
-                        VerdictInstance::worker(timestamp, roots_base64, policy::OpenSSLPolicy::default(), rx_job, tx_res, debug),
+                        VerdictInstance::worker(timestamp, roots_base64, OpenSSLPolicy::default(), rx_job, tx_res, debug),
                 })),
         }))
     }

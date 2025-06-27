@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use csv::ReaderBuilder;
 use clap::Parser;
 
-use verdict::parser::{parse_x509_der, decode_base64};
+use verdict::{parse_x509_der, decode_base64};
 
 use crate::ct_logs::*;
 use crate::error::*;

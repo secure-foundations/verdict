@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{self, BufWriter, BufReader, Write};
 use std::thread;
 
-use verdict::policy::{ExecPurpose, ExecTask};
+use verdict::{ExecPurpose, ExecTask};
 use chrono::Utc;
 use clap::Parser;
 use crossbeam::channel::{self, Receiver, Sender};

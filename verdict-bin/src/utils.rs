@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use verdict::parser::decode_base64;
+use verdict::decode_base64;
 
 use crate::error::Error;
 
