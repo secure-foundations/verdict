@@ -118,7 +118,7 @@ impl Base128UInt {
     /// Serialize v in base-128 encoding
     /// last_byte is true iff the encoding should have the highest bit of the last byte set to 0
     closed spec fn spec_serialize_helper(v: UInt, last_byte: bool) -> Seq<u8>
-        decreases v via Self::spec_serialize_dereases
+        decreases v via Self::spec_serialize_decreases
     {
         if v == 0 {
             if last_byte {
@@ -289,8 +289,7 @@ impl Base128UInt {
     }
 
     #[via_fn]
-    proof fn spec_serialize_dereases(v: UInt, last_byte: bool)
-    {
+    proof fn spec_serialize_decreases(v: UInt, last_byte: bool) {
         assert(v != 0 ==> v >> 7 < v) by (bit_vector);
     }
 
@@ -467,6 +466,7 @@ impl Base128UInt {
             invariant
                 0 <= len <= s.len(),
                 Self::all_high_8_bit_set(s@.take(len as int)),
+            decreases s.len() - len
         {
             len = len + 1;
 
@@ -512,13 +512,15 @@ impl Base128UInt {
 
     /// TODO: change this to a non-recursive function
     #[inline(always)]
-    fn serialize_helper(v: UInt) -> (r: Vec<u8>)
+    fn serialize_helper(v: u64) -> (r: Vec<u8>)
         ensures r@ == Self::spec_serialize_helper(v, false)
+        decreases v
     {
         if v == 0 {
             Vec::with_capacity(4) // usually OID arcs fit in 4 bytes
         } else {
             // Add the lowest 7 bits with the highest bit set to 0
+            assert(v != 0 ==> v >> 7 < v) by (bit_vector);
             let mut r = Self::serialize_helper(v >> 7);
             let ghost old_r = r@;
 
@@ -591,6 +593,8 @@ impl Combinator for Base128UInt {
                 !Self::is_high_8_bit_set(s@[len - 1]),
                 Self::spec_parse_helper(s@.take(i as int), false).is_some(),
                 v == Self::spec_parse_helper(s@.take(i as int), false).unwrap(),
+            
+            decreases len - 1 - i
         {
             assert(s@.take(i + 1).drop_last() == s@.take(i as int));
             assert(Self::is_high_8_bit_set(s@.take(len - 1)[i as int]));

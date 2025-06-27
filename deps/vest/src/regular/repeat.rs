@@ -202,6 +202,7 @@ impl<C: Combinator> Repeat<C> where
                 },
                 offset < s@.len() ==>
                     (self@.spec_parse(s@.subrange(offset as int, s@.len() as int)) is Err ==> self@.spec_parse(s@) is Err),
+            decreases s.len() - offset
         {
             let (n, v) = self.0.parse(slice_subrange(s, offset, s.len()))?;
             if n == 0 {
@@ -240,6 +241,7 @@ impl<C: Combinator> Repeat<C> where
                 &&& self@.spec_serialize(old(v)@) matches Ok(s) ==> n == (len + s.len()) && data@
                     =~= seq_splice(old(data)@, (pos + len) as usize, s)
             },
+        decreases old(v)@.len()
     {
         if pos > usize::MAX - len || pos + len >= data.len() {
             return Err(SerializeError::InsufficientBuffer);

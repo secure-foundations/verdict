@@ -721,7 +721,7 @@ fn get_guarded_quantifier(closure: &ExprClosure, is_forall: bool) -> Result<Guar
         return Err(Error::new_spanned(closure, "only support single quantified variable"));
     }
 
-    let (quant_var, Some(quant_type)) = get_simple_pat(&closure.inputs[0])? else {
+    let (quant_var, Some(quant_type)) = get_simple_pat(&closure.inputs[0].pat)? else {
         return Err(Error::new_spanned(closure, "only supports a typed variable as quantifier"));
     };
 
@@ -1481,7 +1481,7 @@ fn compile_rspec(items: Items, trace: bool) -> Result<TokenStream2, Error> {
     // For each function, generate an exec version
     for item_fn in ctx.fns.values() {
         let exec_fn = compile_spec_fn(&ctx, item_fn, trace)?;
-        output.push(quote! { #[verifier::loop_isolation(false)] #exec_fn });
+        output.push(quote! { #[verifier::loop_isolation(false)] #[verifier::exec_allows_no_decreases_clause] #exec_fn });
     }
 
     // println!("########################################");

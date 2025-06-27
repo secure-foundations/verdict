@@ -176,14 +176,14 @@ macro_rules! wrap_combinator_impls {
                 type SpecResult = $spec_result;
 
                 // $inner_expr.view().spec_parse(s)
-                closed spec fn spec_parse(&self, s: Seq<u8>) -> Result<(usize, Self::SpecResult), ()>;
+                uninterp spec fn spec_parse(&self, s: Seq<u8>) -> Result<(usize, Self::SpecResult), ()>;
 
                 // $inner_expr.view().spec_parse_wf(s)
                 #[verifier::external_body]
                 proof fn spec_parse_wf(&self, s: Seq<u8>) {}
 
                 // $inner_expr.view().spec_serialize(v)
-                closed spec fn spec_serialize(&self, v: Self::SpecResult) -> Result<Seq<u8>, ()>;
+                uninterp spec fn spec_serialize(&self, v: Self::SpecResult) -> Result<Seq<u8>, ()>;
             }
 
             impl SecureSpecCombinator for $name {
@@ -212,7 +212,7 @@ macro_rules! wrap_combinator_impls {
                 type Result<$lt> = $result;
                 type Owned =  $owned;
 
-                closed spec fn spec_length(&self) -> Option<usize>;
+                uninterp spec fn spec_length(&self) -> Option<usize>;
 
                 #[verifier::external_body]
                 fn length(&self) -> Option<usize> {
@@ -230,8 +230,8 @@ macro_rules! wrap_combinator_impls {
                 fn parse<'a>(&self, s: &'a [u8]) -> (res: Result<(usize, Self::Result<'a>), ParseError>) {
                     $(let $field_name: $field_type = self.$field_name;)*
                     let res = $inner_expr.parse(s);
-                    #[cfg(trace)] {
-                        use polyfill::*;
+                    #[cfg(feature = "trace")] {
+                        use verdict_polyfill::*;
                         eprintln_join!("[", stringify!($name), "] ", format_dbg(&res));
                     }
                     res

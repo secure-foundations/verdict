@@ -11,14 +11,14 @@ use verdict_parser::x509::*;
 
 verus! {
 
-pub closed spec fn spec_p256_verify(
+pub uninterp spec fn spec_p256_verify(
     alg: SpecAlgorithmIdentifierValue,
     pub_key: Seq<u8>,
     sig: Seq<u8>,
     msg: Seq<u8>,
 ) -> bool;
 
-pub closed spec fn spec_p384_verify(
+pub uninterp spec fn spec_p384_verify(
     alg: SpecAlgorithmIdentifierValue,
     pub_key: Seq<u8>,
     sig: Seq<u8>,

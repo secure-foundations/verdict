@@ -135,9 +135,8 @@ pub fn normalize_string(s: &str) -> (res: String)
 
             i == spec_chars_iter_index(iter),
             spec_normalize_string(s@) =~= res@ + spec_normalize_string_helper(s@.skip(i as int), seen_nw, seen_ws),
-
-        ensures
-            i == s@.len(),
+        ensures i == s@.len()
+        decreases s@.len() - i
     {
         if let Some(c) = chars_iter_next(&mut iter) {
             if c == ' ' {
@@ -165,7 +164,7 @@ pub fn normalize_string(s: &str) -> (res: String)
 }
 
 /// NOTE: For lower case folding, we trust Rust's built-in definition
-pub closed spec fn spec_char_lower(c: char) -> Seq<char>;
+pub uninterp spec fn spec_char_lower(c: char) -> Seq<char>;
 
 #[verifier::external_body]
 #[inline(always)]

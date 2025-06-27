@@ -21,6 +21,7 @@ verdict-rspec-lib = { path = "../verdict-rspec-lib" }
 [features]
 default = []
 aws-lc = []
+trace = ["verdict-parser/trace"]
 
 [package.metadata.verus]
 verify = true

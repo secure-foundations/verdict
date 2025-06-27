@@ -6,14 +6,14 @@ use verdict_parser::x509::*;
 
 verus! {
 
-pub closed spec fn spec_p256_verify(
+pub uninterp spec fn spec_p256_verify(
     alg: SpecAlgorithmIdentifierValue,
     pub_key: Seq<u8>,
     sig: Seq<u8>,
     msg: Seq<u8>,
 ) -> bool;
 
-pub closed spec fn spec_p384_verify(
+pub uninterp spec fn spec_p384_verify(
     alg: SpecAlgorithmIdentifierValue,
     pub_key: Seq<u8>,
     sig: Seq<u8>,
@@ -29,7 +29,7 @@ pub enum ECDSAError {
 /// Verify ECDSA P-256 signature with SHA-256/SHA-384 through AWS-LC
 #[verifier::external_body]
 pub fn p256_verify(
-    alg: &AlgorithmIdentifierValue,
+    alg: &AlgorithmIdentifierValue<'_>,
     pub_key: &[u8],
     sig: &[u8],
     msg: &[u8],
@@ -57,7 +57,7 @@ pub fn p256_verify(
 /// since only P-384 + SHA-384 is verified in AWS-LC)
 #[verifier::external_body]
 pub fn p384_verify(
-    alg: &AlgorithmIdentifierValue,
+    alg: &AlgorithmIdentifierValue<'_>,
     pub_key: &[u8],
     sig: &[u8],
     msg: &[u8],

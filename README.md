@@ -18,26 +18,25 @@ To build, first run (Bash or Zsh)
 ```
 . tools/activate.sh
 ```
-This will first compile a vendored version of Verus, and then
-provide a command `vargo` with the same usage as `cargo`.
+This will first compile a vendored version of Verus and add relevant binaries to `PATH`.
 
 To verify and build the entire project, run
 ```
-vargo build --release
+cargo verus build --release
 ```
 Then use `target/release/verdict` to validate certificate chains or run benchmarks.
 See `target/release/verdict --help` for details.
 
-By default, we only use crypto primitives that are verified from [libcrux](https://github.com/cryspen/libcrux) and [aws-lc-rs](https://github.com/aws/aws-lc-rs).
+By default, we only use *verified* crypto primitives from [libcrux](https://github.com/cryspen/libcrux) and [aws-lc-rs](https://github.com/aws/aws-lc-rs).
 To use primitives entirely from `aws-lc-rs` which might have better performance but include unverified signature checking for RSA and ECDSA P-256,
 compile with
 ```
-vargo build --release --features aws-lc
+cargo verus build --release --features aws-lc
 ```
 
 To run some sanity checks
 ```
-vargo test --workspace
+cargo test --workspace
 ```
 
 ### Build without verification
@@ -56,7 +55,7 @@ which should work like in a normal Rust package, with all verification annotatio
 
 Use
 ```
-RUSTFLAGS="--cfg trace" vargo build [--release]
+cargo verus build [--release] --features trace
 ```
 to build a version with tracing enabled.
 This will print out every successfully parsed construct and the result of each predicate in the policy DSL.

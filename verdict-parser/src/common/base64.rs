@@ -380,6 +380,7 @@ impl Combinator for Base64 {
 
                 Self::spec_parse_helper(s@.skip(i as int)) is Err ==>
                     Self::spec_parse_helper(s@) is Err,
+            decreases len - i
         {
             assert(len - i == s@.skip(i as int).len());
 
@@ -458,6 +459,7 @@ impl Combinator for Base64 {
 
                 // Self::spec_serialize_helper(v@.skip(i as int)) is Err ==>
                 //     Self::spec_serialize_helper(v@) is Err,
+            decreases len - i
         {
             let v1 = v[i];
             let v2 = if len - i > 1 { v[i + 1] } else { 0 };

@@ -2,8 +2,8 @@
 #![allow(unexpected_cfgs)]
 
 use vstd::prelude::*;
-#[cfg(trace)] use verdict_rspec::rspec_trace as rspec;
-#[cfg(not(trace))] use verdict_rspec::rspec;
+#[cfg(feature = "trace")] use verdict_rspec::rspec_trace as rspec;
+#[cfg(not(feature = "trace"))] use verdict_rspec::rspec;
 use verdict_rspec_lib::*;
 
 use crate::issue;
@@ -21,9 +21,9 @@ pub trait Policy: Send + Sync {
         ensures res == self.spec_likely_issued(issuer.deep_view(), subject.deep_view());
 
     /// User-defined chain/path validation
-    spec fn spec_valid_chain(&self, chain: Seq<Certificate>, task: Task) -> Result<bool, PolicyError>;
+    spec fn spec_valid_chain(&self, chain: Seq<Certificate>, task: Task) -> bool;
 
-    fn valid_chain(&self, chain: &Vec<&ExecCertificate>, task: &ExecTask) -> (res: Result<bool, ExecPolicyError>)
+    fn valid_chain(&self, chain: &Vec<&ExecCertificate>, task: &ExecTask) -> (res: bool)
         ensures res.deep_view() == self.spec_valid_chain(chain.deep_view(), task.deep_view());
 }
 
@@ -358,7 +358,7 @@ pub open spec fn check_duplicate_extensions(cert: &Certificate) -> bool
 } // rspec!
 
 /// NOTE: unspecified
-pub closed spec fn str_lower(s: &SpecString) -> SpecString;
+pub uninterp spec fn str_lower(s: &SpecString) -> SpecString;
 
 #[verifier::external_body]
 pub fn exec_str_lower(s: &String) -> (res: String)

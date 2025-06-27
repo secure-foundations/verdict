@@ -7,10 +7,10 @@ use libcrux::digest;
 
 verus! {
 
-pub closed spec fn spec_sha224_digest(data: Seq<u8>) -> Seq<u8>;
-pub closed spec fn spec_sha256_digest(data: Seq<u8>) -> Seq<u8>;
-pub closed spec fn spec_sha384_digest(data: Seq<u8>) -> Seq<u8>;
-pub closed spec fn spec_sha512_digest(data: Seq<u8>) -> Seq<u8>;
+pub uninterp spec fn spec_sha224_digest(data: Seq<u8>) -> Seq<u8>;
+pub uninterp spec fn spec_sha256_digest(data: Seq<u8>) -> Seq<u8>;
+pub uninterp spec fn spec_sha384_digest(data: Seq<u8>) -> Seq<u8>;
+pub uninterp spec fn spec_sha512_digest(data: Seq<u8>) -> Seq<u8>;
 
 #[verifier::external_body]
 #[inline(always)]

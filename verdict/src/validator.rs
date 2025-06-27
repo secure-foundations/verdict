@@ -127,8 +127,7 @@ impl<P: Policy> Query<P> {
     pub open spec fn path_satisfies_policy(self, path: Seq<usize>, root_idx: usize) -> bool {
         let candidate = path.map_values(|i| self.bundle[i as int]) + seq![self.roots[root_idx as int]];
         let abstract_candidate = candidate.map_values(|cert| policy::Certificate::spec_from(cert).unwrap());
-
-        self.policy.spec_valid_chain(abstract_candidate, self.task) matches Ok(res) && res
+        self.policy.spec_valid_chain(abstract_candidate, self.task)
     }
 
     pub open spec fn valid(self) -> bool {
@@ -425,10 +424,7 @@ impl<'a, P: Policy> Validator<'a, P> {
             (path@.map_values(|i| cache.bundle@[i as int]) + seq![self.roots@[root_idx as int]])
                 .map_values(|cert| policy::Certificate::spec_from(cert).unwrap()));
 
-        match self.policy.valid_chain(&candidate, &cache.task) {
-            Ok(res) => Ok(res),
-            Err(err) => Err(ValidationError::PolicyError(err)),
-        }
+        Ok(self.policy.valid_chain(&candidate, &cache.task))
     }
 
     /// Given a simple path through the bundle certificates
@@ -465,7 +461,8 @@ impl<'a, P: Policy> Validator<'a, P> {
                 forall |j| 0 <= j < i ==>
                     !query.path_satisfies_policy(path@, #[trigger] root_issuers@[j]),
         {
-            #[cfg(trace)] eprintln_join!("checking path: ", format_dbg(path), " w/ root ", root_issuers[i]);
+            #[cfg(feature = "trace")]
+            eprintln_join!("checking path: ", format_dbg(path), " w/ root ", root_issuers[i]);
 
             if self.check_chain_policy(cache, &path, root_issuers[i])? {
                 // Found a valid chain
@@ -594,6 +591,7 @@ impl<'a, P: Policy> Validator<'a, P> {
     /// a task and try to build a valid chain through
     /// the `bundle` of intermediate certificates
     #[verifier::loop_isolation(false)]
+    #[verifier::exec_allows_no_decreases_clause]
     pub fn validate(
         &self,
         bundle: &VecDeep<CertificateValue<'_>>,
