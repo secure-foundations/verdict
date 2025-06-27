@@ -1,6 +1,6 @@
 [submodule "deps/verus"]
 	path = deps/verus
-	url = https://github.com/zhengyao-lin/verus.git
+	url = https://github.com/verus-lang/verus.git
 	branch = x509
 [submodule "deps/libcrux"]
 	path = deps/libcrux

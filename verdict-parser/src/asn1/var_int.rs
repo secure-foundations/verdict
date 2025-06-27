@@ -280,6 +280,7 @@ impl Combinator for VarUInt {
 
                 // At each iteration, res is the parse result of a suffix of s
                 res == Self((len - i) as usize).spec_parse(s@.skip(i as int)).unwrap().1,
+            decreases i
         {
             let byte = s[i - 1];
 
@@ -359,6 +360,7 @@ impl Combinator for VarUInt {
                     (pos + i) as usize,
                     Self((len - i) as usize).spec_serialize(v & n_byte_max_unsigned!(len - i)).unwrap(),
                 ),
+            decreases i
         {
             let byte = get_nth_byte!(v, len - i);
 

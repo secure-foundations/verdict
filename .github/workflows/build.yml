@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  verified-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,9 +18,28 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Build Debug
-      run: source tools/activate.sh && vargo build
-    - name: Build Release
-      run: source tools/activate.sh && vargo build --release
+    - name: Build debug
+      run: source tools/activate.sh && cargo verus build
+    - name: Build debug with tracing
+      run: source tools/activate.sh && cargo verus build --features trace
+    - name: Build release
+      run: source tools/activate.sh && cargo verus build --release
+    - name: Build release with aws-lc feature
+      run: source tools/activate.sh && cargo verus build --release --features aws-lc
     - name: Test
-      run: source tools/activate.sh && vargo test --workspace
+      run: source tools/activate.sh && cargo test --workspace
+
+  unverified-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Build debug
+      run: cargo build
+    - name: Build release
+      run: cargo build --release
+    - name: Build release with aws-lc feature
+      run: cargo build --release --features aws-lc

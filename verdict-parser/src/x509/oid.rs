@@ -151,7 +151,7 @@ macro_rules! spec_oid {
 pub use spec_oid;
 
 /// Used to suppress Verus warning about broadcast missing triggers
-pub closed spec fn lemma_disjoint_trigger() -> bool;
+pub uninterp spec fn lemma_disjoint_trigger() -> bool;
 
 /// Macro to generate a lemma that states the disjointness of a list of spec terms
 /// NOTE: the disjointness of the provided terms are trusted

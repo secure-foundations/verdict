@@ -332,7 +332,7 @@ impl policy::Certificate {
         res
     }
 
-    pub closed spec fn spec_time_to_timestamp(time: SpecTimeValue) -> Option<i64>;
+    pub uninterp spec fn spec_time_to_timestamp(time: SpecTimeValue) -> Option<i64>;
 
     /// Convert an X.509 Time to a UNIX timestamp
     /// NOTE: this implementation is unverified and trusted

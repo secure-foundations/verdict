@@ -262,6 +262,7 @@ pub fn min_num_bytes_unsigned_exec(v: UInt) -> (res: UInt)
         invariant
             0 <= n <= uint_size!(),
             fits_n_bytes_unsigned!(v, n),
+        decreases n
     {
         if !fits_n_bytes_unsigned!(v, n - 1) {
             return n;
@@ -286,6 +287,7 @@ pub fn min_num_bytes_signed_exec(v: Int) -> (res: UInt)
         invariant
             0 <= n <= uint_size!(),
             fits_n_bytes_signed!(v, n),
+        decreases n
     {
         if !fits_n_bytes_signed!(v, n - 1) {
             assert(v == 0 && !fits_n_bytes_signed!(v, n - 1) ==> n == 1) by (bit_vector);

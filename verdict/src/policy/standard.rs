@@ -9,7 +9,7 @@ verus! {
 /// A validated chain should not contain expired certificates
 pub trait NoExpiration: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len() ==>
@@ -19,7 +19,7 @@ pub trait NoExpiration: Policy {
 /// Outer signature algorithm should match the inner one
 pub trait OuterInnerSigMatch: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len() ==>
@@ -29,7 +29,7 @@ pub trait OuterInnerSigMatch: Policy {
 /// If the extension KeyUsage is present, at least one bit must be set
 pub trait KeyUsageNonEmpty: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len() ==>
@@ -49,7 +49,7 @@ pub trait KeyUsageNonEmpty: Policy {
 /// Issuer and subject UID should only appear if version is 2 or 3
 pub trait IssuerSubjectUIDVersion: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len() ==>
@@ -61,7 +61,7 @@ pub trait IssuerSubjectUIDVersion: Policy {
 /// PathLenConstraints should be non-negative
 pub trait PathLenNonNegative: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len() ==>
@@ -75,7 +75,7 @@ pub trait PathLenNonNegative: Policy {
 /// non-leaf certificates
 pub trait PathLenConstraint: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 1 <= i < chain.len() ==> {
@@ -93,7 +93,7 @@ pub trait PathLenConstraint: Policy {
 /// Every non-leaf certificate must be a CA certificate
 pub trait NonLeafMustBeCA: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 1 <= i < chain.len() ==>
@@ -103,7 +103,7 @@ pub trait NonLeafMustBeCA: Policy {
 /// Every non-leaf certificate must have keyCertSign set in KeyUsage (if present)
 pub trait NonLeafHasKeyCertSign: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 1 <= i < chain.len() ==>
@@ -113,7 +113,7 @@ pub trait NonLeafHasKeyCertSign: Policy {
 /// If SubjectAltName is present, it should contain at least one name
 pub trait NonEmptySAN: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len() ==>
@@ -124,7 +124,7 @@ pub trait NonEmptySAN: Policy {
 /// Conforming CAs MUST mark this (AKI) extension as non-critical.
 pub trait AKINonCritical: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             chain.last().ext_authority_key_id matches Some(akid)
             ==> !akid.critical.unwrap_or(false);
@@ -136,7 +136,7 @@ pub trait AKINonCritical: Policy {
 /// facilitate certification path construction.
 pub trait NonRootHasAKI: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len() - 1 ==>
@@ -151,7 +151,7 @@ pub trait NonRootHasAKI: Policy {
 /// value of cA is TRUE.
 pub trait NonLeafHasSKI: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 1 <= i < chain.len() ==>
@@ -163,7 +163,7 @@ pub trait NonLeafHasSKI: Policy {
 /// include a subjectAltName extension that is marked as critical.
 pub trait EmptySubjectImpliesCriticalSAN: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             chain[0].subject.0.len() == 0
             ==> (chain[0].ext_subject_alt_name matches Some(san) &&
@@ -174,7 +174,7 @@ pub trait EmptySubjectImpliesCriticalSAN: Policy {
 /// Conforming CAs MUST mark this extension (SKI) as non-critical.
 pub trait NonCriticalRootSKI: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             chain.last().ext_subject_key_id matches Some(skid)
             ==> !skid.critical.unwrap_or(false);
@@ -185,7 +185,7 @@ pub trait NonCriticalRootSKI: Policy {
 /// keyIdentifier MUST be present. MUST be identical to the subjectKeyIdentifier field.
 pub trait RootCAHasAKI: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             chain.last().ext_authority_key_id matches Some(akid)
             && akid.key_id matches Some(..);
@@ -197,7 +197,7 @@ pub trait RootCAHasAKI: Policy {
 /// authorityCertSerialNumber MUST NOT be present
 pub trait RootCAAKINoIssuerOrSerial: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             chain.last().ext_authority_key_id matches Some(akid)
             ==> akid.issuer matches None && akid.serial matches None;
@@ -207,7 +207,7 @@ pub trait RootCAAKINoIssuerOrSerial: Policy {
 /// CA/B BR 7.1.2.7.6
 pub trait LeafHasEKU: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             chain[0].ext_extended_key_usage matches Some(eku)
             && !eku.critical.unwrap_or(false);
@@ -217,7 +217,7 @@ pub trait LeafHasEKU: Policy {
 /// CA/B BR 7.1.2.1.2
 pub trait RootHasNoEKU: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             chain.last().ext_extended_key_usage matches None;
 }
@@ -226,7 +226,7 @@ pub trait RootHasNoEKU: Policy {
 /// CA/B BR does not allow DSA keys
 pub trait NoDSA: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len() ==>
@@ -238,7 +238,7 @@ pub trait NoDSA: Policy {
 ///   - Ensure that the modulus size, when encoded, is at least 2048 bits
 pub trait RSA2048: Policy {
     proof fn conformance(&self, chain: Seq<Certificate>, task: Task)
-        requires self.spec_valid_chain(chain, task) matches Ok(res) && res
+        requires self.spec_valid_chain(chain, task)
         ensures
             forall |i: usize| #![trigger chain[i as int]]
                 0 <= i < chain.len()

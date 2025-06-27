@@ -158,6 +158,8 @@ impl<C: Combinator> Repeat<C> where
                     res@ =~= old(res)@ + v
             },
             r is Err ==> self@.spec_parse(s@) is Err
+        
+        decreases s.len(),
     {
         if s.len() == 0 {
             return Ok(());
@@ -187,6 +189,8 @@ impl<C: Combinator> Repeat<C> where
                 &&& self@.spec_serialize(old(v)@) matches Ok(s) ==>
                     n == (len + s.len()) && data@ =~= seq_splice(old(data)@, (pos + len) as usize, s)
             },
+        
+        decreases old(v)@.len()
     {
         if pos > usize::MAX - len || pos + len >= data.len() {
             return Err(SerializeError::InsufficientBuffer);

@@ -30,8 +30,8 @@ pub struct RSAPublicKeyInternal {
     key: *mut u64,
 }
 
-pub closed spec fn spec_pkcs1_v1_5_load_pub_key(pub_key: Seq<u8>) -> Option<RSAPublicKeyInternal>;
-pub closed spec fn spec_pkcs1_v1_5_verify(
+pub uninterp spec fn spec_pkcs1_v1_5_load_pub_key(pub_key: Seq<u8>) -> Option<RSAPublicKeyInternal>;
+pub uninterp spec fn spec_pkcs1_v1_5_verify(
     alg: SpecAlgorithmIdentifierValue,
     pub_key: RSAPublicKeyInternal,
     sig: Seq<u8>,

@@ -161,8 +161,8 @@ pub fn result_or<T, E, E2>(result: Result<T, E>, default: Result<T, E2>) -> (res
 
 /// Currently we do not have a specification in Verus for UTF-8
 /// so we just assume the implementation of `from_utf8` is correct
-pub closed spec fn spec_parse_utf8(s: Seq<u8>) -> Option<Seq<char>>;
-pub closed spec fn spec_serialize_utf8(s: Seq<char>) -> Seq<u8>;
+pub uninterp spec fn spec_parse_utf8(s: Seq<u8>) -> Option<Seq<char>>;
+pub uninterp spec fn spec_serialize_utf8(s: Seq<char>) -> Seq<u8>;
 
 #[verifier::external_body]
 pub proof fn spec_utf8_parse_serialize_roundtrip(buf: Seq<u8>)
@@ -191,7 +191,7 @@ pub fn str_to_utf8(s: &str) -> (res: &[u8])
 }
 
 /// We trust the implementation of `u64::to_string` for now
-pub closed spec fn spec_u64_to_string(x: u64) -> (res: Seq<char>);
+pub uninterp spec fn spec_u64_to_string(x: u64) -> (res: Seq<char>);
 
 #[verifier::external_body]
 pub fn char_to_string(c: char) -> (res: String)
@@ -233,6 +233,7 @@ pub fn vec_map<T, U>(v: &Vec<T>, f: impl Fn(&T) -> U) -> (res: Vec<U>)
             0 <= j <= v.len(),
             j == res.len(),
             forall|i| #![trigger v[i]] 0 <= i < j ==> call_ensures(f, (&v[i],), #[trigger] res[i]),
+        decreases v.len() - j
     {
         res.push(f(&v[j]));
         j += 1;
@@ -509,8 +510,8 @@ pub fn eprintln_debug<T: Debug>(s: T) {
 #[verifier::external_body]
 pub struct CharsIter<'a>(std::str::Chars<'a>);
 
-pub closed spec fn spec_chars_iter_str<'a>(iter: CharsIter<'a>) -> Seq<char>;
-pub closed spec fn spec_chars_iter_index<'a>(iter: CharsIter<'a>) -> int;
+pub uninterp spec fn spec_chars_iter_str<'a>(iter: CharsIter<'a>) -> Seq<char>;
+pub uninterp spec fn spec_chars_iter_index<'a>(iter: CharsIter<'a>) -> int;
 
 #[verifier::external_body]
 pub fn chars_iter_next<'a>(iter: &mut CharsIter<'a>) -> (res: Option<char>)

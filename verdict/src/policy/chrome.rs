@@ -4,8 +4,8 @@
 use vstd::prelude::*;
 
 use verdict_polyfill::strs_to_strings;
-#[cfg(trace)] use verdict_rspec::rspec_trace as rspec;
-#[cfg(not(trace))] use verdict_rspec::rspec;
+#[cfg(feature = "trace")] use verdict_rspec::rspec_trace as rspec;
+#[cfg(not(feature = "trace"))] use verdict_rspec::rspec;
 use verdict_rspec_lib::*;
 
 use super::common::*;
@@ -23,11 +23,11 @@ impl Policy for ChromePolicy {
         internal::exec_likely_issued(issuer, subject)
     }
 
-    closed spec fn spec_valid_chain(&self, chain: Seq<Certificate>, task: Task) -> Result<bool, PolicyError> {
+    closed spec fn spec_valid_chain(&self, chain: Seq<Certificate>, task: Task) -> bool {
         internal::valid_chain(&self.deep_view(), &chain, &task)
     }
 
-    fn valid_chain(&self, chain: &Vec<&ExecCertificate>, task: &ExecTask) -> Result<bool, ExecPolicyError> {
+    fn valid_chain(&self, chain: &Vec<&ExecCertificate>, task: &ExecTask) -> bool {
         internal::exec_valid_chain(self, chain, task)
     }
 }
@@ -576,9 +576,9 @@ pub open spec fn check_all_name_constraints(chain: &Seq<ExecRef<Certificate>>) -
 
 /// chain[0] is the leaf, and assume chain[i] is issued by chain[i + 1] for all i < chain.len() - 1
 /// chain.last() must be a trusted root
-pub open spec fn valid_chain(env: &Policy, chain: &Seq<ExecRef<Certificate>>, task: &Task) -> Result<bool, PolicyError>
+pub open spec fn valid_chain(env: &Policy, chain: &Seq<ExecRef<Certificate>>, task: &Task) -> bool
 {
-    Ok(chain.len() >= 2 && {
+    chain.len() >= 2 && {
         let leaf = &chain[0];
         let root = &chain[chain.len() - 1];
 
@@ -586,7 +586,7 @@ pub open spec fn valid_chain(env: &Policy, chain: &Seq<ExecRef<Certificate>>, ta
         &&& forall |i: usize| 1 <= i < chain.len() - 1 ==> cert_verified_intermediate(&env, &task, #[trigger] &chain[i as int], (i - 1) as usize)
         &&& cert_verified_root(env, task, root, &chain[chain.len() - 2], (chain.len() - 2) as usize)
         &&& check_all_name_constraints(chain)
-    })
+    }
 }
 
 pub open spec fn likely_issued(issuer: &Certificate, subject: &Certificate) -> bool
