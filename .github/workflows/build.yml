@@ -54,7 +54,10 @@ jobs:
 
   update-docs:
     runs-on: ubuntu-latest
-    needs: [format, verified-build, unverified-build]
+    needs: [format, unverified-build]
+    permissions:
+      pages: write
+      id-token: write
     steps:
     - name: Checkout
       uses: actions/checkout@v4
