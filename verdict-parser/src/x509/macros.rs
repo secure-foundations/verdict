@@ -5,7 +5,7 @@ verus! {
 /// Generate a combinator for an ASN.1 SEQUENCE (with default or optional fields)
 ///
 /// For example
-/// ```rust
+/// ```ignore
 /// asn1_sequence! {
 ///     sequence Test {
 ///         typ: ASN1<ObjectIdentifier> = ASN1(ObjectIdentifier),
@@ -276,7 +276,7 @@ pub use gen_field_poly_type;
 /// - `[< $name ValueOwned >]`: the owned result enum
 ///
 /// Example:
-/// ```rust
+/// ```ignore
 /// match_continuation! {
 ///     continuation ExtensionParam<'a>(ObjectIdentifierValue, spec SpecObjectIdentifierValue) {
 ///         oid!(2, 5, 29, 35), spec spec_oid!(2, 5, 29, 35) => AuthorityKeyIdentifier, ASN1<OctetString>, ASN1(OctetString),
@@ -610,7 +610,7 @@ pub use gen_choice_backward_branches;
 /// Generate a combinator for an ASN.1 CHOICE
 ///
 /// For example
-/// ```rust
+/// ```ignore
 /// asn1_choice! {
 ///     choice Test {
 ///         PrintableString(ASN1(PrintableString)): ASN1<PrintableString>,

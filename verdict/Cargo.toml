@@ -2,6 +2,11 @@
 name = "verdict"
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
+description = "A formally-verified X.509 certificate validator"
+homepage = "https://github.com/secure-foundations/verdict"
+repository = "https://github.com/secure-foundations/verdict"
+readme = "README.md"
 
 [dependencies]
 builtin_macros = { path = "../deps/verus/source/builtin_macros" }

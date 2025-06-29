@@ -5,16 +5,18 @@
 //! This is still a very experimental tool, so the API here is likely rough around
 //! the edges and subject to change.
 //!
-//! An example usage of `verdict`:
-//! ```rust
+//! An [example usage](https://github.com/secure-foundations/verdict/blob/main/verdict/examples/validator.rs) of `verdict`:
+//! ```
 //! use verdict::{ChromePolicy, RootStore, Task, Validator};
 //!
-//! const ROOTS: &[u8] = include_bytes!("roots.pem");
-//! const CHAIN: &[u8] = include_bytes!("chain.pem");
+//! const ROOTS: &[u8] = include_bytes!("../tests/roots.pem");
+//! const CHAIN: &[u8] = include_bytes!("../tests/chains/google.pem");
+//! const HOSTNAME: &str = "<hostname>";
+//! const TIMESTAMP: u64 = 1725029869;
 //!
 //! let roots = RootStore::from_pem(ROOTS).unwrap();
 //! let validator = Validator::from_roots(ChromePolicy::default(), &roots).unwrap();
-//! let task = Task::new_server_auth(Some("<hostname>"), <UNIX timestamp>);
+//! let task = Task::new_server_auth(Some(HOSTNAME), TIMESTAMP);
 //!
 //! let valid = validator.validate_pem(CHAIN, &task).unwrap();
 //! ```
