@@ -13,7 +13,7 @@ Build dependencies in Ubuntu 24.04 (other systems are similar):
 ## Using Verdict as a library
 
 The `verdict` crate can be used as a normal Rust library in your own project!
-See here for the documentation: https://secure-foundations.github.io/verdict/verdict/index.html
+See the [documentation](https://secure-foundations.github.io/verdict/verdict/index.html) for more details.
 
 ## Using the CLI
 
