@@ -5,12 +5,14 @@ verus! {
 /// Generate a combinator for an ASN.1 SEQUENCE (with default or optional fields)
 ///
 /// For example
+/// ```rust
 /// asn1_sequence! {
 ///     sequence Test {
 ///         typ: ASN1<ObjectIdentifier> = ASN1(ObjectIdentifier),
 ///         value: DirectoryString = DirectoryString,
 ///     }
 /// }
+/// ```
 ///
 /// NOTE: all sub-combinators have to be prefix secure (for Pair to work)
 /// NOTE: we have the restriction that an OrdChoice combinator cannot
@@ -268,18 +270,20 @@ pub use gen_field_poly_type;
 /// and stored in the suitable variant.
 ///
 /// This generates the following types:
-/// - [< $name Cont >]: a continuation struct to be used in Depend
-/// - [< Spec $name Value >]: the spec result enum
-/// - [< $name Value >]: the normal result enum
-/// - [< $name ValueOwned >]: the owned result enum
+/// - `[< $name Cont >]`: a continuation struct to be used in Depend
+/// - `[< Spec $name Value >]`: the spec result enum
+/// - `[< $name Value >]`: the normal result enum
+/// - `[< $name ValueOwned >]`: the owned result enum
 ///
 /// Example:
+/// ```rust
 /// match_continuation! {
 ///     continuation ExtensionParam<'a>(ObjectIdentifierValue, spec SpecObjectIdentifierValue) {
 ///         oid!(2, 5, 29, 35), spec spec_oid!(2, 5, 29, 35) => AuthorityKeyIdentifier, ASN1<OctetString>, ASN1(OctetString),
 ///         _ => Other, ASN1<OctetString>, ASN1(OctetString),
 ///     }
 /// }
+/// ```
 #[allow(unused_macros)]
 #[macro_export]
 macro_rules! match_continuation {
@@ -606,14 +610,16 @@ pub use gen_choice_backward_branches;
 /// Generate a combinator for an ASN.1 CHOICE
 ///
 /// For example
+/// ```rust
 /// asn1_choice! {
 ///     choice Test {
 ///         PrintableString(ASN1(PrintableString)): ASN1<PrintableString>,
 ///         UTF8String(ASN1(UTF8String)): ASN1<UTF8String>,
 ///     }
 /// }
+/// ```
 ///
-/// This essentially generates an OrdChoice combinator over all the choices
+/// This essentially generates an `OrdChoice` combinator over all the choices
 ///
 /// NOTE: Since we can't generate match branches in macros, there is a small
 /// artifact in the definition of the result type: a last variant with name

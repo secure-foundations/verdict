@@ -35,9 +35,11 @@ verus! {
 
     /// Parses the given bytes in ASN.1 DER format
     /// to a [`x509::CertificateValue`].
-    /// 
+    ///
     /// This function has been formally verified for parsing soundness,
     /// completeness, and non-malleability.
+    ///
+    /// NOTE: This is an internal function that is subject to change.
     pub fn parse_x509_der<'a>(bytes: &'a [u8]) -> (res: Result<x509::CertificateValue<'a>, ParseError>)
         ensures
             res matches Ok(res) ==> {
@@ -96,9 +98,11 @@ verus! {
     }
 
     /// Decodes a Base64-encoded sequence of bytes.
-    /// 
+    ///
     /// This function has been formally verified for its
     /// parsing soundness, completeness, and non-malleability.
+    ///
+    /// NOTE: This is an internal function that is subject to change.
     pub fn decode_base64(encoded: &[u8]) -> (res: Result<Vec<u8>, ParseError>)
         ensures
             res matches Ok(res) ==> {

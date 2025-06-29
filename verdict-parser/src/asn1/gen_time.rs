@@ -32,14 +32,14 @@ macro_rules! nine_char { {} => { '9' as u8 }; }
 
 /// TODO: this file is a bit of mess, clean it up
 ///
-/// Three formats, each with 4 variants (https://obj-sys.com/asn1tutorial/node14.html):
-/// 1. Local time only. ``YYYYMMDDHH[MM[SS[.fff]]]'', where the optional fff is accurate to three decimal places.
+/// Three formats, each with 4 variants (<https://obj-sys.com/asn1tutorial/node14.html>):
+/// 1. Local time only. `YYYYMMDDHH[MM[SS[.fff]]]`, where the optional fff is accurate to three decimal places.
 ///    Possible lengths: 10, 12, 14, 18.
 ///
-/// 2. Universal time (UTC time) only. ``YYYYMMDDHH[MM[SS[.fff]]]Z''.
+/// 2. Universal time (UTC time) only. `YYYYMMDDHH[MM[SS[.fff]]]Z`.
 ///    Possible lengths: 11, 13, 15, 19.
 ///
-/// 3. Difference between local and UTC times. ``YYYYMMDDHH[MM[SS[.fff]]]+-HHMM''.
+/// 3. Difference between local and UTC times. `YYYYMMDDHH[MM[SS[.fff]]]+-HHMM`.
 ///    Possible lengths: 15, 17, 19, 23.
 #[derive(Debug, View)]
 pub struct GeneralizedTime;

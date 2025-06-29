@@ -26,7 +26,7 @@ pub trait SpecIso {
     ;
 }
 
-/// Similar fix to https://github.com/secure-foundations/vest/issues/16
+/// Similar fix to <https://github.com/secure-foundations/vest/issues/16>
 pub trait SpecIsoFn: SpecIso {
     /// Applies the isomorphism to the source type.
     spec fn spec_apply(s: Self::Src) -> Self::Dst;
@@ -242,7 +242,7 @@ pub trait SpecTryFromInto {
     ;
 }
 
-/// Similar fix to https://github.com/secure-foundations/vest/issues/16
+/// Similar fix to <https://github.com/secure-foundations/vest/issues/16>
 pub trait SpecTryFromIntoFn: SpecTryFromInto {
     /// Applies the faillible conversion to the source type.
     spec fn spec_apply(s: Self::Src) -> Result<

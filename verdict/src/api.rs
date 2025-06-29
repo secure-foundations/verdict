@@ -81,6 +81,11 @@ impl RootStore {
         })
     }
 
+    /// Returns the number of root certificates.
+    pub fn len(&self) -> usize {
+        self.0.roots_der.len()
+    }
+
     /// Adds certificates in DER format.
     /// NOTE: this may not fully parse the certificates until used later.
     pub fn add_der_certs(&mut self, certs: impl Iterator<Item = impl AsRef<[u8]>>) -> Result<()> {
@@ -165,7 +170,7 @@ pub trait Policy: Send + Sync {
     fn likely_issued(&self, issuer: &Certificate, subject: &Certificate) -> bool;
 
     /// A policy-specific predicate to check if a certificate chain is
-    /// considered valid with the provided [`ExecTask`], provided that
+    /// considered valid with the provided [`Task`], provided that
     /// for each `i`, `chain[i]` is issued by `chain[i + 1]`,
     /// and `chain.last()` is a trusted root certificate.
     fn valid_chain(&self, chain: &Vec<&Certificate>, task: &Task) -> bool;
@@ -344,5 +349,10 @@ impl<'a> Validator<'a> {
     pub fn print_debug_info(&self, chain_base64: &Vec<Vec<u8>>, task: &Task) -> Result<()> {
         self.0.print_debug_info(chain_base64, &task.0)?;
         Ok(())
+    }
+
+    /// Returns the number of root certificates.
+    pub fn num_roots(&self) -> usize {
+        self.0.roots.len()
     }
 }

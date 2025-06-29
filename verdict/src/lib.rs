@@ -7,21 +7,19 @@
 //!
 //! An example usage of `verdict`:
 //! ```rust
-//! use verdict::{Validator, RootStore, ChromePolicy, ExecTask, ExecPurpose};
+//! use verdict::{ChromePolicy, RootStore, Task, Validator};
 //!
-//! let roots = RootStore::from_base64(<root certificates>).unwrap();
-//! let validator = Validator::from_root_store(ChromePolicy, &roots).unwrap();
-//! let valid = validator.validate_base64(
-//!     <certificate chain, with the first element being the leaf>,
-//!     &ExecTask {
-//!         hostname: Some("<hostname>".to_string()),
-//!         purpose: ExecPurpose::ServerAuth,
-//!         now: 1751058397,
-//!     },
-//! ).unwrap();
+//! const ROOTS: &[u8] = include_bytes!("roots.pem");
+//! const CHAIN: &[u8] = include_bytes!("chain.pem");
+//!
+//! let roots = RootStore::from_pem(ROOTS).unwrap();
+//! let validator = Validator::from_roots(ChromePolicy::default(), &roots).unwrap();
+//! let task = Task::new_server_auth(Some("<hostname>"), <UNIX timestamp>);
+//!
+//! let valid = validator.validate_pem(CHAIN, &task).unwrap();
 //! ```
 //! Here, both the root certificates and certificate chain are
-//! X.509 certificates in ASN.1 DER format, encoded in Base64.
+//! loaded in PEM format.
 //! The result in `valid` indicates whether Chromium's X.509
 //! validation policy that we modeled in Verdict ([`ChromePolicy`])
 //! considers the certificate chain valid (agsinst the provided root

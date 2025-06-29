@@ -69,3 +69,8 @@ If you are considering using Verdict or any of its components, see these crates:
 - `verdict-parser` contains the verified parsers and serializers of X.509 and various ASN.1 components.
 
 Other crates include supporting tools and macros.
+
+## Using Verdict as a library
+
+The `verdict` crate can be used as a normal Rust library in your own project.
+See `verdict/examples` for examples of using `verdict`.

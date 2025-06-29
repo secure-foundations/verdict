@@ -6,7 +6,7 @@ use std::fmt::Debug;
 verus! {
 
 /// Use this type to tell rspec to generate
-/// String as exec impl instead of Vec<char>
+/// String as exec impl instead of [`Vec<char>`]
 pub type SpecString = Seq<char>;
 
 // A marker to denote that the compiled type should have a reference
