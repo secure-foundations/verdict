@@ -13,7 +13,8 @@ pub use super::*;
 
 verus! {
 
-/// Common trait for all policies (e.g. [`super::chrome::ChromePolicy`])
+/// Common trait for all policies (e.g. [`super::chrome::ChromePolicy`]).
+/// NOTE: this is the internal version.
 pub trait Policy: Send + Sync {
     /// User-defined issuing relation without checking signature
     spec fn spec_likely_issued(&self, issuer: Certificate, subject: Certificate) -> bool;

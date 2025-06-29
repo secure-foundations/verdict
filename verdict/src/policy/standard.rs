@@ -1,7 +1,8 @@
-/// Traits of `Policy` that specify selected rules from RFC 5280 and CA/B BRs
+//! Traits of `Policy` that specify selected rules from RFC 5280 and CA/B BRs
+
+#![allow(unused)]
 
 use vstd::prelude::*;
-
 use super::common::*;
 
 verus! {

@@ -1,4 +1,4 @@
-/// High-level specs and impls of chain building and validation
+//! High-level specs and impls of chain building and validation
 
 use vstd::prelude::*;
 
@@ -44,9 +44,10 @@ pub open spec fn spec_validate_x509_base64<P: Policy>(
 /// Validates a certificate chain against a set of
 /// trusted root certificates, all represented in
 /// ASN.1 DER (encoded in Base64).
-/// 
+///
 /// A [`Policy`] also needs to be specified
 /// along with a [`ExecTask`] to be performed
+#[allow(unused)]
 pub fn validate_x509_base64<P: Policy>(
     roots_base64: &Vec<Vec<u8>>,
     chain_base64: &Vec<Vec<u8>>,
@@ -81,6 +82,7 @@ pub fn validate_x509_base64<P: Policy>(
     Ok(res)
 }
 
+#[allow(unused)]
 pub struct Query<P: Policy> {
     pub policy: P,
     pub roots: Seq<SpecCertificateValue>,
@@ -141,17 +143,7 @@ impl<P: Policy> Query<P> {
     }
 }
 
-/// A formally verified X.509 certificate validation engine
-/// that uses the policies specified by `P`.
-/// 
-/// Initialize from [`Validator::from_parsed_roots`] or
-/// [`Validator::from_root_store`], and then use
-/// [`Validator::validate_base64`]/[`Validator::validate_der`]/[`Validator::validate`]
-/// to (parse and) validate certificates.
-/// 
-/// **NOTE:** please do not use [`Validator`]'s fields
-/// directly, as they are only public due to how the
-/// Verus proof is currently structured.
+/// The internal version of X.509 validator
 pub struct Validator<'a, P: Policy> {
     pub policy: P,
     pub roots: VecDeep<CertificateValue<'a>>,
@@ -195,7 +187,7 @@ impl<'a, 'b, 'c> ValidatorCache<'a, 'b, 'c> {
     }
 }
 
-impl<'a, P: Policy> Validator<'a, P> {
+impl<'a, P: Policy + 'a> Validator<'a, P> {
     /// Initializes a [`Validator`] from parsed root certificates.
     #[verifier::loop_isolation(false)]
     pub fn from_parsed_roots(policy: P, roots: VecDeep<CertificateValue<'a>>) -> (res: Result<Self, ValidationError>)
@@ -825,19 +817,10 @@ impl<'a, P: Policy> Validator<'a, P> {
 
 /// A collection of trusted root certificates
 pub struct RootStore {
-    /// DER encodings of all root certificates
-    /// **NOTE:** please do not use this field as it is
-    /// only public due to how the Verus proof is
-    /// currently structured.
     pub roots_der: Vec<Vec<u8>>,
 }
 
 impl RootStore {
-    /// Creates a [`RootStore`] from a list of ASN.1 DER-encoded root certificates.
-    pub fn from_owned_der(roots_der: Vec<Vec<u8>>) -> RootStore {
-        RootStore { roots_der }
-    }
-
     /// Creates a [`RootStore`] from a list of root certificates in Base64-encoded ASN.1 DER format.
     pub fn from_base64(roots_base64: &Vec<Vec<u8>>) -> (res: Result<RootStore, ParseError>)
         ensures
@@ -950,7 +933,6 @@ impl<'a, P: Policy> Validator<'a, P> {
         Ok(())
     }
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -1,4 +1,4 @@
-use verdict::{ExecPurpose, ExecTask};
+use verdict::Task;
 use clap::Parser;
 
 use crate::error::*;
@@ -39,9 +39,9 @@ pub fn main(args: Args) -> Result<(), Error> {
     let mut instance = harness.spawn(&args.roots, timestamp)?;
 
     let task = if let Some(domain) = &args.domain {
-        ExecTask { hostname: Some(domain.to_string()), purpose: ExecPurpose::ServerAuth, now: timestamp }
+        Task::new_server_auth(Some(domain), timestamp)
     } else {
-        ExecTask { hostname: None, purpose: ExecPurpose::ServerAuth, now: timestamp }
+        Task::new_server_auth(None, timestamp)
     };
 
     let chain = read_pem_file_as_base64(&args.chain)?;

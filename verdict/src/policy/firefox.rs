@@ -125,6 +125,7 @@ use exec_has_dns_name_constraint as has_dns_name_constraint;
 use exec_has_ip_addr_name_constraint as has_ip_addr_name_constraint;
 use exec_check_duplicate_extensions as check_duplicate_extensions;
 
+#[allow(unused)]
 pub struct Policy {
     /// NOTE: crlSet in Hammurabi
     pub crl: Seq<SpecString>,

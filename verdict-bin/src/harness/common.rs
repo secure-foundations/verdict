@@ -1,7 +1,7 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout};
 
-use verdict::{ExecTask, ExecPurpose};
+use verdict::Task;
 use clap::{Parser, ValueEnum};
 
 use crate::error::*;
@@ -29,7 +29,7 @@ pub trait Harness {
 }
 
 pub trait Instance: Send {
-    fn validate(&mut self, bundle: &Vec<String>, task: &ExecTask, repeat: usize) -> Result<ValidationResult, Error>;
+    fn validate(&mut self, bundle: &Vec<String>, task: &Task, repeat: usize) -> Result<ValidationResult, Error>;
 }
 
 /// A common protocol used by the test harnesses of Chrome, Firefox, etc.
@@ -51,7 +51,7 @@ impl CommonBenchInstance {
 }
 
 impl Instance for CommonBenchInstance {
-    fn validate(&mut self, bundle: &Vec<String>, task: &ExecTask, repeat: usize) -> Result<ValidationResult, Error> {
+    fn validate(&mut self, bundle: &Vec<String>, task: &Task, repeat: usize) -> Result<ValidationResult, Error> {
         if bundle.len() == 0 {
             return Err(Error::EmptyBundle);
         }
@@ -60,7 +60,7 @@ impl Instance for CommonBenchInstance {
             return Err(Error::ZeroRepeat);
         }
 
-        let task_str = match &task.hostname {
+        let task_str = match task.hostname() {
             Some(hostname) => {
                 if hostname.trim().is_empty() {
                     // Abort if the domain is empty
@@ -76,7 +76,7 @@ impl Instance for CommonBenchInstance {
         };
 
         // Check that `task`'s timestamp is consistent with `spawn`
-        if task.now != self.timestamp {
+        if task.timestamp() != self.timestamp {
             return Err(Error::Inconsistentimestamps);
         }
 

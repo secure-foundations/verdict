@@ -1,14 +1,14 @@
 //! Welcome to the documentation for `verdict`, a formally verified
 //! X.509 certificate validation library (developed using [Verus](https://verus.rs)).
 //! You can also find a CLI tool and more details about Verdict at [our GitHub repo](https://github.com/secure-foundations/verdict).
-//! 
+//!
 //! This is still a very experimental tool, so the API here is likely rough around
 //! the edges and subject to change.
-//! 
+//!
 //! An example usage of `verdict`:
 //! ```rust
 //! use verdict::{Validator, RootStore, ChromePolicy, ExecTask, ExecPurpose};
-//! 
+//!
 //! let roots = RootStore::from_base64(<root certificates>).unwrap();
 //! let validator = Validator::from_root_store(ChromePolicy, &roots).unwrap();
 //! let valid = validator.validate_base64(
@@ -26,7 +26,7 @@
 //! validation policy that we modeled in Verdict ([`ChromePolicy`])
 //! considers the certificate chain valid (agsinst the provided root
 //! store, hostname, and timestamp).
-//! 
+//!
 //! We have also modeled the X.509 validation policies in
 //! Firefox ([`FirefoxPolicy`]) and OpenSSL ([`OpenSSLPolicy`]).
 
@@ -41,20 +41,7 @@ mod convert;
 mod error;
 mod policy;
 mod validator;
+mod utils;
+mod api;
 
-pub use error::{
-    ValidationError, ParseError,
-};
-
-pub use validator::{
-    validate_x509_base64, RootStore, Validator,
-};
-
-pub use policy::{
-    ChromePolicy, FirefoxPolicy, OpenSSLPolicy,
-    ExecCertificate, ExecPurpose, ExecTask, Policy,
-};
-
-pub use verdict_parser::{
-    parse_x509_der, decode_base64,
-};
+pub use api::*;

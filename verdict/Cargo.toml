@@ -17,6 +17,8 @@ verdict-macros = { path = "../verdict-macros" }
 verdict-parser = { path = "../verdict-parser" }
 verdict-rspec = { path = "../verdict-rspec" }
 verdict-rspec-lib = { path = "../verdict-rspec-lib" }
+thiserror = "2.0.12"
+ref-cast = "1.0.24"
 
 [features]
 default = []

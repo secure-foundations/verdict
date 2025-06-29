@@ -1,27 +1,22 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+//! Some (unverified) utility functions, such as decoding PEM to Base64
 
-use verdict::decode_base64;
+use std::io::BufRead;
+use thiserror::Error;
 
-use crate::error::Error;
+#[derive(Debug, Error)]
+pub enum PEMParseError {
+    #[error("found BEGIN CERTIFICATE without matching END CERTIFICATE")]
+    NoMatchingEndCertificate,
 
-pub fn read_pem_file_as_base64(path: &str) -> Result<Vec<String>, Error> {
-    let file = BufReader::new(File::open(path)?);
-    read_pem_as_base64(file).collect()
+    #[error("found END CERTIFICATE without matching BEGIN CERTIFICATE")]
+    NoMatchingBeginCertificate,
+
+    #[error("IO error: {0}")]
+    IOError(#[from] std::io::Error),
 }
 
-/// Read a PEM file (given as a BufRead) and return an iterator over the decoded certificates
-pub fn read_pem_as_bytes<B: BufRead>(reader: B) -> impl Iterator<Item = Result<Vec<u8>, Error>> {
-    read_pem_as_base64(reader).map(|res|
-        match res {
-            Ok(cert_base64) => Ok(decode_base64(cert_base64.as_bytes())?),
-            Err(err) => Err(err),
-        }
-    )
-}
-
-/// Read a PEM file and return an iterator over base64 encoded strings
-pub fn read_pem_as_base64<B: BufRead>(reader: B) -> impl Iterator<Item = Result<String, Error>> {
+/// Decodes PEM format and returns an iterator over Base64-encoded strings
+pub fn read_pem_as_base64<B: BufRead>(reader: B) -> impl Iterator<Item = Result<String, PEMParseError>> {
     const PREFIX: &'static str = "-----BEGIN CERTIFICATE-----";
     const SUFFIX: &'static str = "-----END CERTIFICATE-----";
 
@@ -34,7 +29,7 @@ pub fn read_pem_as_base64<B: BufRead>(reader: B) -> impl Iterator<Item = Result<
 
             if line_trimmed == PREFIX {
                 if cur_cert_base64.is_some() {
-                    Err(Error::NoMatchingEndCertificate)
+                    Err(PEMParseError::NoMatchingEndCertificate)
                 } else {
                     cur_cert_base64 = Some(String::new());
                     Ok(None)
@@ -43,7 +38,7 @@ pub fn read_pem_as_base64<B: BufRead>(reader: B) -> impl Iterator<Item = Result<
                 match cur_cert_base64.take() {
                     // Found some base64 chunk
                     Some(cert_base64) => Ok(Some(cert_base64)),
-                    None => Err(Error::NoMatchingBeginCertificate),
+                    None => Err(PEMParseError::NoMatchingBeginCertificate),
                 }
             } else if let Some(cur_cert_base64) = cur_cert_base64.as_mut() {
                 cur_cert_base64.push_str(line_trimmed);

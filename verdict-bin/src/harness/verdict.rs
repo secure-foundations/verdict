@@ -7,7 +7,7 @@ use clap::ValueEnum;
 
 use verdict::{
     ChromePolicy, FirefoxPolicy, OpenSSLPolicy,
-    Policy, ExecTask, RootStore, Validator, parse_x509_der, decode_base64,
+    Policy, Task, RootStore, Validator,
 };
 
 use crossbeam::channel;
@@ -34,7 +34,7 @@ pub struct VerdictHarness {
 
 struct Job {
     bundle: Vec<String>,
-    task: ExecTask,
+    task: Task,
     repeat: usize,
 }
 
@@ -46,25 +46,25 @@ pub struct VerdictInstance {
 
 impl VerdictInstance {
     fn worker<P: Policy>(timestamp: u64, roots_base64: Vec<Vec<u8>>, policy: P, rx_job: Receiver<Job>, tx_res: Sender<ValidationResult>, debug: bool) -> Result<(), Error> {
-        let store = RootStore::from_base64(&roots_base64)?;
-        let validator = Validator::from_root_store(policy, &store)?;
+        let store = RootStore::from_base64(roots_base64.iter())?;
+        let validator = Validator::from_roots(policy, &store)?;
 
         while let Ok(Job { bundle, task, repeat }) = rx_job.recv() {
             let mut durations = Vec::with_capacity(repeat);
-            let mut res = Ok(false);
+            let mut res: Result<bool, verdict::ValidationError> = Ok(false);
             let bundle_bytes: Vec<_> = bundle.into_iter().map(|base64| base64.into_bytes()).collect();
 
             if debug {
                 validator.print_debug_info(&bundle_bytes, &task)?;
             }
 
-            if task.now != timestamp {
+            if task.timestamp() != timestamp {
                 return Err(Error::Inconsistentimestamps);
             }
 
             for _ in 0..repeat {
                 let start = Instant::now();
-                res = validator.validate_base64(&bundle_bytes, &task);
+                res = validator.validate_base64(bundle_bytes.iter(), &task);
                 durations.push(start.elapsed().as_micros()
                     .try_into().map_err(|_| Error::DurationOverflow)?);
             }
@@ -114,7 +114,7 @@ impl Harness for VerdictHarness {
 }
 
 impl Instance for VerdictInstance {
-    fn validate(&mut self, bundle: &Vec<String>, task: &ExecTask, repeat: usize) -> Result<ValidationResult, Error> {
+    fn validate(&mut self, bundle: &Vec<String>, task: &Task, repeat: usize) -> Result<ValidationResult, Error> {
         if repeat == 0 {
             return Err(Error::ZeroRepeat);
         }

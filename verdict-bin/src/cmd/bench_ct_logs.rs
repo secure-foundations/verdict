@@ -12,7 +12,7 @@ use crossbeam::channel;
 use crossbeam::channel::Receiver;
 use crossbeam::channel::Sender;
 use csv::{ReaderBuilder, WriterBuilder};
-use verdict::{ExecTask, ExecPurpose};
+use verdict::Task;
 
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
@@ -95,9 +95,9 @@ fn worker(args: &Args, timestamp: u64, mut instance: Box<dyn Instance>, rx_job: 
         }
 
         let res = if args.no_domain {
-            instance.validate(&bundle, &ExecTask { hostname: None, purpose: ExecPurpose::ServerAuth, now: timestamp }, args.repeat)?
+            instance.validate(&bundle, &Task::new_server_auth(None, timestamp), args.repeat)?
         } else {
-            instance.validate(&bundle, &ExecTask { hostname: Some(entry.domain.to_string()), purpose: ExecPurpose::ServerAuth, now: timestamp }, args.repeat)?
+            instance.validate(&bundle, &Task::new_server_auth(Some(&entry.domain), timestamp), args.repeat)?
         };
 
         // Send back a CTLogResult

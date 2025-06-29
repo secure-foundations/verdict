@@ -2,15 +2,12 @@ use thiserror::Error;
 
 use std::sync::mpsc::{RecvError, SendError};
 
-use verdict::{ValidationError, ParseError as X509ParseError};
+use verdict::{ParseError, ValidationError};
 
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("IO error: {0}")]
     IOError(#[from] std::io::Error),
-
-    #[error("x509 parse error: {0:?}")]
-    X509ParseError(X509ParseError),
 
     #[error("csv error: {0}")]
     CSVError(#[from] csv::Error),
@@ -22,7 +19,7 @@ pub enum Error {
     NoMatchingBeginCertificate,
 
     #[error("validation error: {0:?}")]
-    ChainValidationError(ValidationError),
+    ChainValidationError(#[from] ValidationError),
 
     #[error("regex error: {0}")]
     RegexError(#[from] regex::Error),
@@ -92,17 +89,14 @@ pub enum Error {
 
     #[error("root certificates not found at {0}")]
     RootsNotFound(String),
+
+    #[error("parse error: {0:?}")]
+    ParseError(ParseError),
 }
 
-impl From<X509ParseError> for Error {
-    fn from(err: X509ParseError) -> Self {
-        Error::X509ParseError(err)
-    }
-}
-
-impl From<ValidationError> for Error {
-    fn from(err: ValidationError) -> Self {
-        Error::ChainValidationError(err)
+impl From<ParseError> for Error {
+    fn from(err: ParseError) -> Self {
+        Error::ParseError(err)
     }
 }
 
