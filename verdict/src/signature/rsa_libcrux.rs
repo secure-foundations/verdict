@@ -2,12 +2,12 @@
 
 use vstd::prelude::*;
 
-use verdict_polyfill::{slice_eq, slice_drop_first, slice_skip, usize_into_u32};
+use verdict_polyfill::{slice_drop_first, slice_eq, slice_skip, usize_into_u32};
 
-use verdict_parser::PolyfillEq;
-use verdict_parser::Combinator;
 use verdict_parser::asn1::ASN1;
 use verdict_parser::x509::*;
+use verdict_parser::Combinator;
+use verdict_parser::PolyfillEq;
 
 use crate::hash;
 

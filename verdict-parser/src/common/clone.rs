@@ -1,7 +1,6 @@
-/// Define and implement a temporary Clone replacement "PolyfillClone" for some types
-
-use vstd::prelude::*;
 use super::*;
+/// Define and implement a temporary Clone replacement "PolyfillClone" for some types
+use vstd::prelude::*;
 
 verus! {
 

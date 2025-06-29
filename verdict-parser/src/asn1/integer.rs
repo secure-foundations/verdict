@@ -1,5 +1,5 @@
-use vstd::prelude::*;
 use super::*;
+use vstd::prelude::*;
 
 verus! {
 
@@ -158,13 +158,13 @@ mod test {
 
     #[test]
     fn parse() {
-        assert_eq!(Integer.parse(&[ 0x01, 0x00 ]).unwrap(), (2, 0));
-        assert_eq!(Integer.parse(&[ 0x01, 0xff ]).unwrap(), (2, -1));
-        assert_eq!(Integer.parse(&[ 0x02, 0x00, 0xff ]).unwrap(), (3, 0xff));
+        assert_eq!(Integer.parse(&[0x01, 0x00]).unwrap(), (2, 0));
+        assert_eq!(Integer.parse(&[0x01, 0xff]).unwrap(), (2, -1));
+        assert_eq!(Integer.parse(&[0x02, 0x00, 0xff]).unwrap(), (3, 0xff));
 
-        assert!(Integer.parse(&[ 0x00 ]).is_err());
-        assert!(Integer.parse(&[ 0x81, 0x01, 0xff ]).is_err());
-        assert!(Integer.parse(&[ 0x02, 0x00, 0x7f ]).is_err()); // violation of minimal encoding
+        assert!(Integer.parse(&[0x00]).is_err());
+        assert!(Integer.parse(&[0x81, 0x01, 0xff]).is_err());
+        assert!(Integer.parse(&[0x02, 0x00, 0x7f]).is_err()); // violation of minimal encoding
     }
 
     fn serialize_int(v: IntegerValue) -> Result<Vec<u8>, SerializeError> {

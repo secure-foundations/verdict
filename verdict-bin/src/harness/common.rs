@@ -1,18 +1,18 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout};
 
-use verdict::Task;
 use clap::{Parser, ValueEnum};
+use verdict::Task;
 
-use crate::error::*;
-use super::verdict::*;
+use super::armor::*;
+use super::ceres::*;
 use super::chrome::*;
 use super::firefox::*;
+use super::hammurabi::*;
 use super::openssl::*;
 use super::verdict::*;
-use super::armor::*;
-use super::hammurabi::*;
-use super::ceres::*;
+use super::verdict::*;
+use crate::error::*;
 
 #[derive(Debug)]
 pub struct ValidationResult {
@@ -29,7 +29,12 @@ pub trait Harness {
 }
 
 pub trait Instance: Send {
-    fn validate(&mut self, bundle: &Vec<String>, task: &Task, repeat: usize) -> Result<ValidationResult, Error>;
+    fn validate(
+        &mut self,
+        bundle: &Vec<String>,
+        task: &Task,
+        repeat: usize,
+    ) -> Result<ValidationResult, Error>;
 }
 
 /// A common protocol used by the test harnesses of Chrome, Firefox, etc.
@@ -46,12 +51,22 @@ impl CommonBenchInstance {
     pub fn new(mut child: Child, timestamp: u64) -> Result<CommonBenchInstance, Error> {
         let stdin = child.stdin.take().ok_or(Error::ChildStdin)?;
         let stdout = child.stdout.take().ok_or(Error::ChildStdout)?;
-        Ok(CommonBenchInstance { timestamp, child, stdin, stdout: BufReader::new(stdout) })
+        Ok(CommonBenchInstance {
+            timestamp,
+            child,
+            stdin,
+            stdout: BufReader::new(stdout),
+        })
     }
 }
 
 impl Instance for CommonBenchInstance {
-    fn validate(&mut self, bundle: &Vec<String>, task: &Task, repeat: usize) -> Result<ValidationResult, Error> {
+    fn validate(
+        &mut self,
+        bundle: &Vec<String>,
+        task: &Task,
+        repeat: usize,
+    ) -> Result<ValidationResult, Error> {
         if bundle.len() == 0 {
             return Err(Error::EmptyBundle);
         }
@@ -71,7 +86,7 @@ impl Instance for CommonBenchInstance {
                     });
                 }
                 format!("domain: {}", hostname)
-            },
+            }
             None => "validate".to_string(),
         };
 
@@ -97,20 +112,33 @@ impl Instance for CommonBenchInstance {
         // `result: <OK or err msg> <sample 1 time> <sample 2 time> ...`
         if line.starts_with("result:") {
             let mut res = line["result:".len()..].trim().split_ascii_whitespace();
-            let res_fst = res.next().ok_or(Error::CommonBenchError("no results".to_string()))?;
+            let res_fst = res
+                .next()
+                .ok_or(Error::CommonBenchError("no results".to_string()))?;
 
             Ok(ValidationResult {
                 valid: res_fst == "OK",
-                err: if res_fst == "OK" { "".to_string() } else { res_fst.trim().to_string() },
+                err: if res_fst == "OK" {
+                    "".to_string()
+                } else {
+                    res_fst.trim().to_string()
+                },
 
                 // Parse the rest as a space separated list of integers (time in microseconds)
-                stats: res.map(|s| s.parse()).collect::<Result<Vec<_>, _>>()
+                stats: res
+                    .map(|s| s.parse())
+                    .collect::<Result<Vec<_>, _>>()
                     .map_err(|_| Error::CommonBenchError("failed to parse results".to_string()))?,
             })
         } else if line.starts_with("error:") {
-            Err(Error::CommonBenchError(line["error:".len()..].trim().to_string()))
+            Err(Error::CommonBenchError(
+                line["error:".len()..].trim().to_string(),
+            ))
         } else {
-            Err(Error::CommonBenchError(format!("unexpected output: {}", line)))
+            Err(Error::CommonBenchError(format!(
+                "unexpected output: {}",
+                line
+            )))
         }
     }
 }
@@ -132,7 +160,7 @@ impl Drop for CommonBenchInstance {
 pub enum HarnessName {
     Chrome,
     Firefox,
-    #[clap(name="openssl")]
+    #[clap(name = "openssl")]
     OpenSSL,
     Armor,
     HammurabiChrome,
@@ -140,7 +168,7 @@ pub enum HarnessName {
     Ceres,
     VerdictChrome,
     VerdictFirefox,
-    #[clap(name="verdict-openssl")]
+    #[clap(name = "verdict-openssl")]
     VerdictOpenSSL,
 }
 
@@ -182,95 +210,118 @@ pub struct HarnessArgs {
     ceres_repo: Option<String>,
 
     /// Path to libfaketime.so
-    #[clap(long, default_value = "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1")]
+    #[clap(
+        long,
+        default_value = "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1"
+    )]
     faketime_lib: String,
 }
 
 /// Generate a dynamic Harness according the given arguments
 pub fn get_harness_from_args(args: &HarnessArgs, debug: bool) -> Result<Box<dyn Harness>, Error> {
     let bench_repo = match args.bench_repo.clone() {
-        Some(p) => std::fs::canonicalize(p).ok().map(|p| p.to_string_lossy().to_string()),
+        Some(p) => std::fs::canonicalize(p)
+            .ok()
+            .map(|p| p.to_string_lossy().to_string()),
         None => None,
     };
 
     Ok(match args.name {
-        HarnessName::Chrome =>
-            Box::new(ChromeHarness {
-                repo: args.chrome_repo.clone()
-                    .or(bench_repo.clone().map(|p| p + "/chromium"))
-                    .ok_or(Error::CommonBenchError("chrome repo not specified".to_string()))?,
-                faketime_lib: args.faketime_lib.clone(),
-                debug,
-            }),
+        HarnessName::Chrome => Box::new(ChromeHarness {
+            repo: args
+                .chrome_repo
+                .clone()
+                .or(bench_repo.clone().map(|p| p + "/chromium"))
+                .ok_or(Error::CommonBenchError(
+                    "chrome repo not specified".to_string(),
+                ))?,
+            faketime_lib: args.faketime_lib.clone(),
+            debug,
+        }),
 
-        HarnessName::Firefox =>
-            Box::new(FirefoxHarness {
-                repo: args.firefox_repo.clone()
-                    .or(bench_repo.clone().map(|p| p + "/firefox"))
-                    .ok_or(Error::CommonBenchError("firefox repo not specified".to_string()))?,
-                    debug,
-            }),
+        HarnessName::Firefox => Box::new(FirefoxHarness {
+            repo: args
+                .firefox_repo
+                .clone()
+                .or(bench_repo.clone().map(|p| p + "/firefox"))
+                .ok_or(Error::CommonBenchError(
+                    "firefox repo not specified".to_string(),
+                ))?,
+            debug,
+        }),
 
-        HarnessName::OpenSSL =>
-            Box::new(OpenSSLHarness {
-                repo: args.openssl_repo.clone()
-                    .or(bench_repo.clone().map(|p| p + "/openssl"))
-                    .ok_or(Error::CommonBenchError("openssl repo not specified".to_string()))?,
-                debug,
-            }),
+        HarnessName::OpenSSL => Box::new(OpenSSLHarness {
+            repo: args
+                .openssl_repo
+                .clone()
+                .or(bench_repo.clone().map(|p| p + "/openssl"))
+                .ok_or(Error::CommonBenchError(
+                    "openssl repo not specified".to_string(),
+                ))?,
+            debug,
+        }),
 
-        HarnessName::Armor =>
-            Box::new(ArmorHarness {
-                repo: args.armor_repo.clone()
-                    .or(bench_repo.clone().map(|p| p + "/armor"))
-                    .ok_or(Error::CommonBenchError("armor repo not specified".to_string()))?,
-                faketime_lib: args.faketime_lib.clone(),
-                debug,
-            }),
+        HarnessName::Armor => Box::new(ArmorHarness {
+            repo: args
+                .armor_repo
+                .clone()
+                .or(bench_repo.clone().map(|p| p + "/armor"))
+                .ok_or(Error::CommonBenchError(
+                    "armor repo not specified".to_string(),
+                ))?,
+            faketime_lib: args.faketime_lib.clone(),
+            debug,
+        }),
 
-        HarnessName::HammurabiChrome =>
-            Box::new(HammurabiHarness {
-                repo: args.hammurabi_repo.clone()
-                    .or(bench_repo.clone().map(|p| p + "/hammurabi"))
-                    .ok_or(Error::CommonBenchError("hammurabi repo not specified".to_string()))?,
-                policy: HammurabiPolicy::Chrome,
-                debug,
-            }),
+        HarnessName::HammurabiChrome => Box::new(HammurabiHarness {
+            repo: args
+                .hammurabi_repo
+                .clone()
+                .or(bench_repo.clone().map(|p| p + "/hammurabi"))
+                .ok_or(Error::CommonBenchError(
+                    "hammurabi repo not specified".to_string(),
+                ))?,
+            policy: HammurabiPolicy::Chrome,
+            debug,
+        }),
 
-        HarnessName::HammurabiFirefox =>
-            Box::new(HammurabiHarness {
-                repo: args.hammurabi_repo.clone()
-                    .or(bench_repo.clone().map(|p| p + "/hammurabi"))
-                    .ok_or(Error::CommonBenchError("hammurabi repo not specified".to_string()))?,
-                policy: HammurabiPolicy::Firefox,
-                debug,
-            }),
+        HarnessName::HammurabiFirefox => Box::new(HammurabiHarness {
+            repo: args
+                .hammurabi_repo
+                .clone()
+                .or(bench_repo.clone().map(|p| p + "/hammurabi"))
+                .ok_or(Error::CommonBenchError(
+                    "hammurabi repo not specified".to_string(),
+                ))?,
+            policy: HammurabiPolicy::Firefox,
+            debug,
+        }),
 
-        HarnessName::Ceres =>
-            Box::new(CeresHarness {
-                repo: args.ceres_repo.clone()
-                    .or(bench_repo.clone().map(|p| p + "/ceres"))
-                    .ok_or(Error::CommonBenchError("ceres repo not specified".to_string()))?,
-                faketime_lib: args.faketime_lib.clone(),
-                debug,
-            }),
+        HarnessName::Ceres => Box::new(CeresHarness {
+            repo: args
+                .ceres_repo
+                .clone()
+                .or(bench_repo.clone().map(|p| p + "/ceres"))
+                .ok_or(Error::CommonBenchError(
+                    "ceres repo not specified".to_string(),
+                ))?,
+            faketime_lib: args.faketime_lib.clone(),
+            debug,
+        }),
 
-        HarnessName::VerdictChrome =>
-            Box::new(VerdictHarness {
-                policy: VerdictPolicyName::Chrome,
-                debug,
-            }),
+        HarnessName::VerdictChrome => Box::new(VerdictHarness {
+            policy: VerdictPolicyName::Chrome,
+            debug,
+        }),
 
-        HarnessName::VerdictFirefox =>
-            Box::new(VerdictHarness {
-                policy: VerdictPolicyName::Firefox,
-                debug,
-            }),
+        HarnessName::VerdictFirefox => Box::new(VerdictHarness {
+            policy: VerdictPolicyName::Firefox,
+            debug,
+        }),
 
-        HarnessName::VerdictOpenSSL =>
-            Box::new(VerdictHarness {
-                policy: VerdictPolicyName::OpenSSL,
-                debug,
-            }),
+        HarnessName::VerdictOpenSSL => Box::new(VerdictHarness {
+            policy: VerdictPolicyName::OpenSSL,
+            debug,
+        }),
     })
 }

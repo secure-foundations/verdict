@@ -1,9 +1,9 @@
-use verdict::Task;
 use clap::Parser;
+use verdict::Task;
 
 use crate::error::*;
-use crate::utils::*;
 use crate::harness::*;
+use crate::utils::*;
 
 #[derive(Parser, Debug)]
 pub struct Args {
@@ -35,7 +35,10 @@ pub struct Args {
 pub fn main(args: Args) -> Result<(), Error> {
     let timestamp = args.override_time.unwrap_or(chrono::Utc::now().timestamp()) as u64;
 
-    let harness = VerdictHarness { policy: args.policy, debug: args.debug };
+    let harness = VerdictHarness {
+        policy: args.policy,
+        debug: args.debug,
+    };
     let mut instance = harness.spawn(&args.roots, timestamp)?;
 
     let task = if let Some(domain) = &args.domain {

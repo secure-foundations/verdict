@@ -1,8 +1,7 @@
-/// Define and implement a temporary Eq replacement "PolyfillEq" for some types
-
-use vstd::prelude::*;
-use crate::asn1::*;
 use super::*;
+use crate::asn1::*;
+/// Define and implement a temporary Eq replacement "PolyfillEq" for some types
+use vstd::prelude::*;
 
 verus! {
 

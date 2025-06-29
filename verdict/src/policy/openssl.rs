@@ -1,10 +1,12 @@
 #![allow(unused_parens)]
 #![allow(unexpected_cfgs)]
 
-use vstd::prelude::*;
-#[cfg(feature = "trace")] use verdict_rspec::rspec_trace as rspec;
-#[cfg(not(feature = "trace"))] use verdict_rspec::rspec;
+#[cfg(not(feature = "trace"))]
+use verdict_rspec::rspec;
+#[cfg(feature = "trace")]
+use verdict_rspec::rspec_trace as rspec;
 use verdict_rspec_lib::*;
+use vstd::prelude::*;
 
 use super::common::*;
 

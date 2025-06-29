@@ -3,8 +3,8 @@
 
 use vstd::prelude::*;
 
+use verdict_parser::{asn1::*, x509::*, *};
 use verdict_polyfill::*;
-use verdict_parser::{*, asn1::*, x509::*};
 
 use crate::signature::*;
 

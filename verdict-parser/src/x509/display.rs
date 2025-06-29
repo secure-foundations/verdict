@@ -1,7 +1,7 @@
 // Impl of Display for some of the X.509 types
 
-use std::fmt::{self, Display};
 use super::*;
+use std::fmt::{self, Display};
 
 impl<'a> Display for DirectoryStringValue<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

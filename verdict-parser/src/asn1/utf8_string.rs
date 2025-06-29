@@ -1,6 +1,6 @@
+use super::*;
 use vstd::prelude::*;
 use vstd::vstd::slice::slice_subrange;
-use super::*;
 
 verus! {
 

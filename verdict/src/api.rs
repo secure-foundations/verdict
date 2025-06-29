@@ -1,25 +1,18 @@
 //! Public wrappers for some core constructs.
 #![warn(missing_docs)]
 
-use vstd::prelude::*;
 use std::io::BufRead;
+use vstd::prelude::*;
 
 use crate::error;
-use crate::utils::{read_pem_as_base64, PEMParseError};
-use crate::validator::{
-    RootStore as InternalRootStore,
-    Validator as InternalValidator,
-};
 use crate::policy::{
-    Policy as InternalPolicy,
-    ExecCertificate as InternalCertificate,
-    ExecTask as InternalTask,
-    ExecPurpose as InternalPurpose,
-    ExecPolicyError as InternalPolicyError,
-    ChromePolicy as InternalChromePolicy,
-    FirefoxPolicy as InternalFirefoxPolicy,
-    OpenSSLPolicy as InternalOpenSSLPolicy,
+    ChromePolicy as InternalChromePolicy, ExecCertificate as InternalCertificate,
+    ExecPolicyError as InternalPolicyError, ExecPurpose as InternalPurpose,
+    ExecTask as InternalTask, FirefoxPolicy as InternalFirefoxPolicy,
+    OpenSSLPolicy as InternalOpenSSLPolicy, Policy as InternalPolicy,
 };
+use crate::utils::{read_pem_as_base64, PEMParseError};
+use crate::validator::{RootStore as InternalRootStore, Validator as InternalValidator};
 use ref_cast::RefCast;
 use thiserror::Error;
 use verdict_parser::VecDeep;
@@ -95,7 +88,10 @@ impl RootStore {
 
     /// Adds certificates encoded in Base64 format.
     /// NOTE: this may not fully parse the certificates until used later.
-    pub fn add_base64_certs(&mut self, certs: impl Iterator<Item = impl AsRef<[u8]>>) -> Result<()> {
+    pub fn add_base64_certs(
+        &mut self,
+        certs: impl Iterator<Item = impl AsRef<[u8]>>,
+    ) -> Result<()> {
         for cert in certs {
             let der = decode_base64(cert.as_ref())?;
             self.0.roots_der.push(der);
@@ -204,10 +200,7 @@ impl Task {
     /// Creates a new [`Task`] for server authentication,
     /// specifying the (optional) hostname and UNIX timestamp
     /// as the validation time.
-    pub fn new_server_auth(
-        hostname: Option<&str>,
-        now: u64,
-    ) -> Self {
+    pub fn new_server_auth(hostname: Option<&str>, now: u64) -> Self {
         Task(InternalTask {
             hostname: hostname.map(|s| s.to_string()),
             purpose: InternalPurpose::ServerAuth,
@@ -309,8 +302,7 @@ impl<'a> Validator<'a> {
     /// Creates a new [`Validator`] with the given custom policy and root store.
     pub fn from_roots<P: Policy + 'a>(policy: P, roots: &'a RootStore) -> Result<Self> {
         let policy: BoxDynInternalPolicy<'a> = BoxDynInternalPolicy(Box::new(policy));
-        let validator =
-            InternalValidator::from_root_store(policy, &roots.0)?;
+        let validator = InternalValidator::from_root_store(policy, &roots.0)?;
         Ok(Validator(validator))
     }
 
@@ -320,15 +312,16 @@ impl<'a> Validator<'a> {
         let chain_base64 = read_pem_as_base64(pem)
             .map(|res| res)
             .collect::<std::result::Result<Vec<_>, PEMParseError>>()?;
-        self.validate_base64(
-            chain_base64.iter().map(|c| c.as_bytes()),
-            task,
-        )
+        self.validate_base64(chain_base64.iter().map(|c| c.as_bytes()), task)
     }
 
     /// Validates a certificate chain in ASN.1 DER format encoded in Base64,
     /// assuming that the first certificate is the leaf certificate.
-    pub fn validate_base64(&self, chain_base64: impl Iterator<Item = impl AsRef<[u8]>>, task: &Task) -> Result<bool> {
+    pub fn validate_base64(
+        &self,
+        chain_base64: impl Iterator<Item = impl AsRef<[u8]>>,
+        task: &Task,
+    ) -> Result<bool> {
         let chain_der = chain_base64
             .map(|c| decode_base64(c.as_ref()))
             .collect::<std::result::Result<Vec<_>, _>>()?;
@@ -337,7 +330,11 @@ impl<'a> Validator<'a> {
 
     /// Validates a certificate chain in ASN.1 DER format,
     /// assuming that the first certificate is the leaf certificate.
-    pub fn validate_der<'b>(&self, chain_der: impl Iterator<Item = &'b [u8]>, task: &Task) -> Result<bool> {
+    pub fn validate_der<'b>(
+        &self,
+        chain_der: impl Iterator<Item = &'b [u8]>,
+        task: &Task,
+    ) -> Result<bool> {
         let chain = chain_der
             .map(|c| parse_x509_der(c))
             .collect::<std::result::Result<Vec<_>, _>>()?;

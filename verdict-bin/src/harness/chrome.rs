@@ -16,10 +16,13 @@ impl Harness for ChromeHarness {
     /// Spawns a child process to run cert_bench
     fn spawn(&self, roots_path: &str, timestamp: u64) -> Result<Box<dyn Instance>, Error> {
         let mut bin_path = PathBuf::from(&self.repo);
-        bin_path.extend([ "src", "out", "Release", "cert_bench" ]);
+        bin_path.extend(["src", "out", "Release", "cert_bench"]);
 
-        let fake_time = Utc.timestamp_opt(timestamp as i64, 0).unwrap()
-            .format("%Y-%m-%d %H:%M:%S").to_string();
+        let fake_time = Utc
+            .timestamp_opt(timestamp as i64, 0)
+            .unwrap()
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
 
         // Check `args.faketime_lib` exists
         if !PathBuf::from(&self.faketime_lib).exists() {

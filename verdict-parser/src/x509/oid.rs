@@ -2,8 +2,8 @@
 
 use vstd::prelude::*;
 
-pub use crate::asn1::UInt;
 pub use crate::asn1::ObjectIdentifierValue;
+pub use crate::asn1::UInt;
 pub use crate::common::VecDeep;
 
 verus! {

@@ -1,5 +1,5 @@
-use vstd::prelude::*;
 use super::*;
+use vstd::prelude::*;
 
 verus! {
 
@@ -151,14 +151,17 @@ mod test {
     fn diff_with_der() {
         let diff = |bytes: &[u8]| {
             let res1 = serialize_octet_string(bytes).map_err(|_| ());
-            let res2 = der::asn1::OctetString::new(bytes).unwrap().to_der().map_err(|_| ());
+            let res2 = der::asn1::OctetString::new(bytes)
+                .unwrap()
+                .to_der()
+                .map_err(|_| ());
             assert_eq!(res1, res2);
         };
 
         diff(&[]);
-        diff(&[ 0 ]);
-        diff(&[ 0; 256 ]);
-        diff(&[ 0; 257 ]);
-        diff(&[ 0; 65536 ]);
+        diff(&[0]);
+        diff(&[0; 256]);
+        diff(&[0; 257]);
+        diff(&[0; 65536]);
     }
 }

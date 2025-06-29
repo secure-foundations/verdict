@@ -1,15 +1,15 @@
 use std::fs::File;
-use std::io::{self, BufWriter, BufReader, Write};
+use std::io::{self, BufReader, BufWriter, Write};
 use std::thread;
 
-use verdict::Task;
 use chrono::Utc;
 use clap::Parser;
 use crossbeam::channel::{self, Receiver, Sender};
 use csv::WriterBuilder;
-use limbo_harness_support::models::{ExpectedResult, Testcase, Limbo, PeerKind, ValidationKind};
-use tempfile::NamedTempFile;
+use limbo_harness_support::models::{ExpectedResult, Limbo, PeerKind, Testcase, ValidationKind};
 use serde::{Deserialize, Serialize};
+use tempfile::NamedTempFile;
+use verdict::Task;
 
 use crate::error::*;
 use crate::harness::*;
@@ -59,20 +59,26 @@ pub struct LimboResult {
 
 /// Strip -----BEGIN CERTIFICATE----- and -----END CERTIFICATE-----
 /// and remove any whitespaces
-fn strip_pem(s: &str) -> Option<String>
-{
-    Some(s.trim()
-        .strip_prefix("-----BEGIN CERTIFICATE-----")?
-        .strip_suffix("-----END CERTIFICATE-----")?
-        .chars()
-        .filter(|c| !c.is_whitespace())
-        .collect())
+fn strip_pem(s: &str) -> Option<String> {
+    Some(
+        s.trim()
+            .strip_prefix("-----BEGIN CERTIFICATE-----")?
+            .strip_suffix("-----END CERTIFICATE-----")?
+            .chars()
+            .filter(|c| !c.is_whitespace())
+            .collect(),
+    )
 }
 
-fn test_limbo(args: &Args, harness: &Box<dyn Harness>, testcase: &Testcase) -> Result<LimboResult, Error>
-{
+fn test_limbo(
+    args: &Args,
+    harness: &Box<dyn Harness>,
+    testcase: &Testcase,
+) -> Result<LimboResult, Error> {
     let tmp_root_file = NamedTempFile::with_suffix(".pem")?;
-    let tmp_root_path = tmp_root_file.path().to_str()
+    let tmp_root_path = tmp_root_file
+        .path()
+        .to_str()
         .ok_or(io::Error::other("failed to convert path to str"))?
         .to_string();
 
@@ -86,14 +92,12 @@ fn test_limbo(args: &Args, harness: &Box<dyn Harness>, testcase: &Testcase) -> R
 
     let mut instance = harness.spawn(&tmp_root_path, timestamp)?;
 
-    let mut bundle = vec![
-        strip_pem(&testcase.peer_certificate)
-            .ok_or(Error::LimboError("failed to process PEM".to_string()))?
-    ];
+    let mut bundle = vec![strip_pem(&testcase.peer_certificate)
+        .ok_or(Error::LimboError("failed to process PEM".to_string()))?];
 
     for interm in &testcase.untrusted_intermediates {
-        bundle.push(strip_pem(interm)
-            .ok_or(Error::LimboError("failed to process PEM".to_string()))?);
+        bundle
+            .push(strip_pem(interm).ok_or(Error::LimboError("failed to process PEM".to_string()))?);
     }
 
     let task = if let Some(peer_name) = &testcase.expected_peer_name {
@@ -119,8 +123,11 @@ fn test_limbo(args: &Args, harness: &Box<dyn Harness>, testcase: &Testcase) -> R
     })
 }
 
-fn worker(args: &Args, rx_job: Receiver<&Testcase>, tx_res: Sender<LimboResult>) -> Result<(), Error>
-{
+fn worker(
+    args: &Args,
+    rx_job: Receiver<&Testcase>,
+    tx_res: Sender<LimboResult>,
+) -> Result<(), Error> {
     let harness = get_harness_from_args(&args.harness, args.debug)?;
 
     while let Ok(testcase) = rx_job.recv() {
@@ -131,10 +138,10 @@ fn worker(args: &Args, rx_job: Receiver<&Testcase>, tx_res: Sender<LimboResult>)
 }
 
 /// Collect results and write to stdout
-fn reducer(rx_res: Receiver<LimboResult>) -> Result<(), Error>
-{
-    let mut output_writer =
-        WriterBuilder::new().has_headers(false).from_writer(std::io::stdout());
+fn reducer(rx_res: Receiver<LimboResult>) -> Result<(), Error> {
+    let mut output_writer = WriterBuilder::new()
+        .has_headers(false)
+        .from_writer(std::io::stdout());
 
     let mut total = 0;
     let mut conformant = 0;
@@ -149,21 +156,31 @@ fn reducer(rx_res: Receiver<LimboResult>) -> Result<(), Error>
         output_writer.flush()?;
     }
 
-    eprintln!("{}/{} conformant ({} errors)", conformant, total, total - conformant);
+    eprintln!(
+        "{}/{} conformant ({} errors)",
+        conformant,
+        total,
+        total - conformant
+    );
 
     Ok(())
 }
 
-pub fn main(args: Args) -> Result<(), Error>
-{
+pub fn main(args: Args) -> Result<(), Error> {
     let limbo: Limbo = serde_json::from_reader(BufReader::new(File::open(&args.path)?))?;
     eprintln!("loaded {} testcases", limbo.testcases.len());
 
     // Only perform server authentication and DNS name validation (if enabled)
-    let filter = |t: &&Testcase|
-        t.validation_kind == ValidationKind::Server &&
-        (t.expected_peer_name.is_some() && t.expected_peer_name.as_ref().unwrap().kind == PeerKind::Dns) &&
-        if let Some(id) = &args.test_id { &t.id.to_string() == id } else { true };
+    let filter = |t: &&Testcase| {
+        t.validation_kind == ValidationKind::Server
+            && (t.expected_peer_name.is_some()
+                && t.expected_peer_name.as_ref().unwrap().kind == PeerKind::Dns)
+            && if let Some(id) = &args.test_id {
+                &t.id.to_string() == id
+            } else {
+                true
+            }
+    };
 
     let (tx_job, rx_job) = channel::bounded(args.num_jobs);
     let (tx_res, rx_res) = channel::bounded(args.num_jobs);

@@ -1,8 +1,7 @@
+use super::*;
 /// TODO: maybe refactor this using Refined
-
 use std::fmt::{self, Debug, Formatter};
 use vstd::prelude::*;
-use super::*;
 
 verus! {
 

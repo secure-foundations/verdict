@@ -1,8 +1,8 @@
 // Copied from Vest to avoid a Verus export/import issue with some tweaks on Depend
 
+use super::*;
 use vstd::prelude::*;
 use vstd::slice::slice_subrange;
-use super::*;
 
 verus! {
 

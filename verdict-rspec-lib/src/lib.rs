@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
-use vstd::prelude::*;
 use std::fmt::Debug;
+use vstd::prelude::*;
 
 verus! {
 

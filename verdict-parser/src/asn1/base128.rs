@@ -1,5 +1,5 @@
-use vstd::prelude::*;
 use super::*;
+use vstd::prelude::*;
 
 verus! {
 
@@ -593,7 +593,7 @@ impl Combinator for Base128UInt {
                 !Self::is_high_8_bit_set(s@[len - 1]),
                 Self::spec_parse_helper(s@.take(i as int), false).is_some(),
                 v == Self::spec_parse_helper(s@.take(i as int), false).unwrap(),
-            
+
             decreases len - 1 - i
         {
             assert(s@.take(i + 1).drop_last() == s@.take(i as int));
@@ -698,7 +698,9 @@ mod tests {
     fn diff_with_der() {
         let diff = |v: UInt| {
             let res1 = serialize_base_128_uint(v).map_err(|_| ());
-            let res2 = der::asn1::ObjectIdentifier::new_unwrap(format!("1.2.{}", v).as_str()).to_der().map_err(|_| ());
+            let res2 = der::asn1::ObjectIdentifier::new_unwrap(format!("1.2.{}", v).as_str())
+                .to_der()
+                .map_err(|_| ());
             assert_eq!(res1, res2);
         };
 

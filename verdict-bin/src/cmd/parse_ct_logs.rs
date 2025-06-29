@@ -1,10 +1,10 @@
-use std::fs::File;
 use std::collections::HashMap;
+use std::fs::File;
 
-use csv::ReaderBuilder;
 use clap::Parser;
+use csv::ReaderBuilder;
 
-use verdict::{parse_x509_der, decode_base64};
+use verdict::{decode_base64, parse_x509_der};
 
 use crate::ct_logs::*;
 use crate::error::*;
@@ -18,8 +18,7 @@ pub struct Args {
     ignore_parse_errors: bool,
 }
 
-pub fn main(args: Args) -> Result<(), Error>
-{
+pub fn main(args: Args) -> Result<(), Error> {
     eprintln!("parsing {} CT log file(s)", args.csv_files.len());
 
     // Count the number of certificates using each subject key algo
@@ -33,7 +32,7 @@ pub fn main(args: Args) -> Result<(), Error>
 
         let file = File::open(&path)?;
         let mut reader = ReaderBuilder::new()
-            .has_headers(false)  // If your CSV has headers
+            .has_headers(false) // If your CSV has headers
             .from_reader(file);
 
         for result in reader.deserialize() {
@@ -62,7 +61,10 @@ pub fn main(args: Args) -> Result<(), Error>
             num_parsed_total += 1;
         }
 
-        eprintln!("parsed {} certificate(s) in {} (total {})", num_parsed, path, num_parsed_total);
+        eprintln!(
+            "parsed {} certificate(s) in {} (total {})",
+            num_parsed, path, num_parsed_total
+        );
         eprintln!("subject key algorithms found so far: {:?}", subject_keys);
         eprintln!("signature algorithms found so far: {:?}", signature_algs);
     }

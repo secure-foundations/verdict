@@ -22,10 +22,15 @@ pub fn derive_view(input: TokenStream) -> TokenStream {
 
     // Get type parameters A1, A2, ..., An
     // TODO: collect trait bounds here?
-    let generic_idents: Vec<_> = input.generics.params.iter().map(|g| match g {
-        syn::GenericParam::Type(ty) => &ty.ident,
-        _ => panic!("derive(View) only supports type parameters"),
-    }).collect();
+    let generic_idents: Vec<_> = input
+        .generics
+        .params
+        .iter()
+        .map(|g| match g {
+            syn::GenericParam::Type(ty) => &ty.ident,
+            _ => panic!("derive(View) only supports type parameters"),
+        })
+        .collect();
 
     // Generate A1::V, ..., An::V
     let generic_view_types = generic_idents.iter().map(|ident| {
@@ -33,9 +38,12 @@ pub fn derive_view(input: TokenStream) -> TokenStream {
     });
 
     // Map to A1: View, ... An: View
-    let view_generic_idents: Vec<_> = generic_idents.iter().map(|ident| {
-        quote! { #ident: View }
-    }).collect();
+    let view_generic_idents: Vec<_> = generic_idents
+        .iter()
+        .map(|ident| {
+            quote! { #ident: View }
+        })
+        .collect();
 
     // Generate `impl View` body
     let view_body = match input.data {
@@ -60,7 +68,7 @@ pub fn derive_view(input: TokenStream) -> TokenStream {
                             }
                         }
                     }
-                },
+                }
                 Fields::Named(fields) => {
                     // Handle named structs
                     let field_view = fields.named.iter().map(|f| {
@@ -82,7 +90,7 @@ pub fn derive_view(input: TokenStream) -> TokenStream {
                             }
                         }
                     }
-                },
+                }
                 Fields::Unit => {
                     quote! {
                         ::builtin_macros::verus! {
@@ -97,7 +105,7 @@ pub fn derive_view(input: TokenStream) -> TokenStream {
                     }
                 }
             }
-        },
+        }
         Data::Enum(data) => {
             // Generate match branches
             let variant_matches = data.variants.iter().map(|variant| {
@@ -119,14 +127,14 @@ pub fn derive_view(input: TokenStream) -> TokenStream {
                                 #name::#variant_ident(#(#field_view),*)
                             }
                         }
-                    },
+                    }
                     Fields::Unit => {
                         quote! {
                             #name::#variant_ident => {
                                 #name::#variant_ident
                             }
                         }
-                    },
+                    }
                     _ => panic!("derive(View) only supports unnamed and unit enum variants"),
                 }
             });
@@ -162,18 +170,32 @@ pub fn derive_polyfill_clone(input: TokenStream) -> TokenStream {
 
     // Get type parameters A1, A2, ..., An
     // TODO: collect trait bounds here?
-    let generic_params: Vec<_> = input.generics.params.iter().map(|g| match g {
-        syn::GenericParam::Type(ty) => quote! { #ty },
-        syn::GenericParam::Lifetime(lt) => quote! { #lt },
-        syn::GenericParam::Const(..) => panic!("derive(PolyfillClone) does not support const generics"),
-    }).collect();
+    let generic_params: Vec<_> = input
+        .generics
+        .params
+        .iter()
+        .map(|g| match g {
+            syn::GenericParam::Type(ty) => quote! { #ty },
+            syn::GenericParam::Lifetime(lt) => quote! { #lt },
+            syn::GenericParam::Const(..) => {
+                panic!("derive(PolyfillClone) does not support const generics")
+            }
+        })
+        .collect();
 
     // Map to A1: PolyfillClone, ... An: PolyfillClone (along with any lifetime params)
-    let impl_generic_params: Vec<_> = input.generics.params.iter().map(|g| match g {
-        syn::GenericParam::Type(ty) => quote! { #ty: PolyfillClone },
-        syn::GenericParam::Lifetime(lt) => quote! { #lt },
-        syn::GenericParam::Const(..) => panic!("derive(PolyfillClone) only supports type parameters"),
-    }).collect();
+    let impl_generic_params: Vec<_> = input
+        .generics
+        .params
+        .iter()
+        .map(|g| match g {
+            syn::GenericParam::Type(ty) => quote! { #ty: PolyfillClone },
+            syn::GenericParam::Lifetime(lt) => quote! { #lt },
+            syn::GenericParam::Const(..) => {
+                panic!("derive(PolyfillClone) only supports type parameters")
+            }
+        })
+        .collect();
 
     // Generate `impl PolyfillClone` body
     let view_body = match input.data {
@@ -197,7 +219,7 @@ pub fn derive_polyfill_clone(input: TokenStream) -> TokenStream {
                             }
                         }
                     }
-                },
+                }
                 Fields::Named(fields) => {
                     // Handle named structs
                     let field_view = fields.named.iter().map(|f| {
@@ -218,7 +240,7 @@ pub fn derive_polyfill_clone(input: TokenStream) -> TokenStream {
                             }
                         }
                     }
-                },
+                }
                 Fields::Unit => {
                     quote! {
                         ::builtin_macros::verus! {
@@ -232,7 +254,7 @@ pub fn derive_polyfill_clone(input: TokenStream) -> TokenStream {
                     }
                 }
             }
-        },
+        }
         Data::Enum(data) => {
             // Generate match branches
             let variant_matches = data.variants.iter().map(|variant| {
@@ -254,15 +276,17 @@ pub fn derive_polyfill_clone(input: TokenStream) -> TokenStream {
                                 #name::#variant_ident(#(#field_view),*)
                             }
                         }
-                    },
+                    }
                     Fields::Unit => {
                         quote! {
                             #name::#variant_ident => {
                                 #name::#variant_ident
                             }
                         }
-                    },
-                    _ => panic!("derive(PolyfillClone) only supports unnamed and unit enum variants"),
+                    }
+                    _ => {
+                        panic!("derive(PolyfillClone) only supports unnamed and unit enum variants")
+                    }
                 }
             });
 

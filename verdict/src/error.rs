@@ -1,6 +1,6 @@
-use vstd::prelude::*;
-pub use verdict_parser::ParseError;
 use crate::policy::ExecPolicyError;
+pub use verdict_parser::ParseError;
+use vstd::prelude::*;
 
 verus! {
 

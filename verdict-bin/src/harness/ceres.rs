@@ -15,10 +15,13 @@ pub struct CeresHarness {
 impl Harness for CeresHarness {
     fn spawn(&self, roots_path: &str, timestamp: u64) -> Result<Box<dyn Instance>, Error> {
         let mut driver_path = PathBuf::from(&self.repo);
-        driver_path.extend([ "src", "driver.py" ]);
+        driver_path.extend(["src", "driver.py"]);
 
-        let fake_time = Utc.timestamp_opt(timestamp as i64, 0).unwrap()
-            .format("%Y-%m-%d %H:%M:%S").to_string();
+        let fake_time = Utc
+            .timestamp_opt(timestamp as i64, 0)
+            .unwrap()
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
 
         // Check `args.faketime_lib` exists
         if !PathBuf::from(&self.faketime_lib).exists() {
@@ -36,7 +39,8 @@ impl Harness for CeresHarness {
             .env("FAKETIME", &format!("@{}", fake_time))
             .arg(std::fs::canonicalize(driver_path)?)
             .arg(std::fs::canonicalize(roots_path)?)
-            .arg("--check-purpose").arg("serverAuth")
+            .arg("--check-purpose")
+            .arg("serverAuth")
             .stdin(process::Stdio::piped())
             .stdout(process::Stdio::piped());
 

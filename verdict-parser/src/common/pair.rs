@@ -1,7 +1,6 @@
-/// Use a custom pair type so that we can impl traits on it
-
-use vstd::prelude::*;
 use super::*;
+/// Use a custom pair type so that we can impl traits on it
+use vstd::prelude::*;
 
 verus! {
 

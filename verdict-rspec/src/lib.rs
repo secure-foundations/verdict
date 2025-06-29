@@ -1,5 +1,5 @@
-use std::fmt;
 use indexmap::IndexMap;
+use std::fmt;
 
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
@@ -8,9 +8,16 @@ use syn_verus::parse::{Parse, ParseStream};
 use syn_verus::punctuated::Punctuated;
 use syn_verus::spanned::Spanned;
 use syn_verus::{
-    parse_macro_input, AngleBracketedGenericArguments, Arm, BigAnd, BigAndExpr, BigOr, BigOrExpr, BinOp, Block, Ensures, Error, Expr, ExprBinary, ExprBlock, ExprCall, ExprCast, ExprClosure, ExprField, ExprIf, ExprLit, ExprMatch, ExprMatches, ExprMethodCall, ExprParen, ExprPath, ExprReference, ExprTuple, ExprUnary, Field, FieldPat, Fields, FieldsNamed, FieldsUnnamed, FnArg, FnArgKind, FnMode, GenericArgument, Ident, Index, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, Lit, LitBool, LitStr, Local, LocalInit, MatchesOpExpr, MatchesOpToken, Pat, PatIdent, PatPath, PatReference, PatStruct, PatTuple, PatTupleStruct, PatType, PatWild, Path, PathArguments, PathSegment, Publish, ReturnType, Signature, SignatureSpec, Specification, Stmt, Type, TypePath, TypeReference, UnOp, UseRename, UseTree, Variant, Visibility
+    parse_macro_input, AngleBracketedGenericArguments, Arm, BigAnd, BigAndExpr, BigOr, BigOrExpr,
+    BinOp, Block, Ensures, Error, Expr, ExprBinary, ExprBlock, ExprCall, ExprCast, ExprClosure,
+    ExprField, ExprIf, ExprLit, ExprMatch, ExprMatches, ExprMethodCall, ExprParen, ExprPath,
+    ExprReference, ExprTuple, ExprUnary, Field, FieldPat, Fields, FieldsNamed, FieldsUnnamed,
+    FnArg, FnArgKind, FnMode, GenericArgument, Ident, Index, Item, ItemEnum, ItemFn, ItemMod,
+    ItemStruct, Lit, LitBool, LitStr, Local, LocalInit, MatchesOpExpr, MatchesOpToken, Pat,
+    PatIdent, PatPath, PatReference, PatStruct, PatTuple, PatTupleStruct, PatType, PatWild, Path,
+    PathArguments, PathSegment, Publish, ReturnType, Signature, SignatureSpec, Specification, Stmt,
+    Type, TypePath, TypeReference, UnOp, UseRename, UseTree, Variant, Visibility,
 };
-
 
 struct Context {
     structs: IndexMap<String, ItemStruct>,
@@ -297,13 +304,17 @@ fn get_simple_type_param(ty: &Type, n: usize) -> Result<Type, Error> {
 fn get_simple_pat(pat: &Pat) -> Result<(&Ident, Option<Box<Type>>), Error> {
     if let Pat::Ident(pat_ident) = pat {
         return Ok((&pat_ident.ident, None));
-    } if let Pat::Type(PatType { pat, ty, .. }) = pat {
+    }
+    if let Pat::Type(PatType { pat, ty, .. }) = pat {
         if let Pat::Ident(pat_ident) = pat.as_ref() {
             return Ok((&pat_ident.ident, Some(ty.clone())));
         }
     }
 
-    Err(Error::new_spanned(pat, "expect a simple pattern (variable or typed variable)"))
+    Err(Error::new_spanned(
+        pat,
+        "expect a simple pattern (variable or typed variable)",
+    ))
 }
 
 /// Check that the expr is a simple variable and return the identifier
@@ -324,7 +335,10 @@ fn compile_type(ctx: &Context, ty: &Type) -> Result<Type, Error> {
     match ty {
         Type::Reference(type_ref) => {
             if type_ref.mutability.is_some() {
-                return Err(Error::new_spanned(ty, "mutable references are not supported"));
+                return Err(Error::new_spanned(
+                    ty,
+                    "mutable references are not supported",
+                ));
             }
 
             Ok(new_type_ref(compile_type(ctx, &type_ref.elem)?))
@@ -347,9 +361,8 @@ fn compile_type(ctx: &Context, ty: &Type) -> Result<Type, Error> {
                 "SpecString" => Ok(param_type!("String")),
 
                 // Integer/float types can stay the same
-                "i8" | "i16" | "i32" | "i64" | "i128" | "u8" | "u16" | "u32" | "u64" | "u128" | "usize" | "isize" |
-                "f32" | "f64" | "bool" | "char" =>
-                    Ok(ty.clone()),
+                "i8" | "i16" | "i32" | "i64" | "i128" | "u8" | "u16" | "u32" | "u64" | "u128"
+                | "usize" | "isize" | "f32" | "f64" | "bool" | "char" => Ok(ty.clone()),
 
                 // TODO: do we want this?
                 // "int" => Ok(param_type!("i64")),
@@ -376,7 +389,11 @@ fn compile_type(ctx: &Context, ty: &Type) -> Result<Type, Error> {
                 "Result" => {
                     let param1 = get_simple_type_param(ty, 0)?;
                     let param2 = get_simple_type_param(ty, 1)?;
-                    Ok(param_type!("Result", compile_type(ctx, &param1)?, compile_type(ctx, &param2)?))
+                    Ok(param_type!(
+                        "Result",
+                        compile_type(ctx, &param1)?,
+                        compile_type(ctx, &param2)?
+                    ))
                 }
 
                 _ => Err(Error::new_spanned(ty, "unsupported/unknown simple type")),
@@ -388,31 +405,50 @@ fn compile_type(ctx: &Context, ty: &Type) -> Result<Type, Error> {
 }
 
 /// Generate exec version of the given struct as well as a deep View impl
-fn compile_struct(ctx: &Context, item_struct: &ItemStruct) -> Result<(ItemStruct, TokenStream2), Error> {
+fn compile_struct(
+    ctx: &Context,
+    item_struct: &ItemStruct,
+) -> Result<(ItemStruct, TokenStream2), Error> {
     if !item_struct.generics.params.is_empty() {
-        return Err(Error::new_spanned(&item_struct.generics, "generics not supported"));
+        return Err(Error::new_spanned(
+            &item_struct.generics,
+            "generics not supported",
+        ));
     }
 
     let spec_name = &item_struct.ident;
-    let exec_name: Ident = Ident::new(&exec_type_name(&item_struct.ident.to_string()), item_struct.span());
+    let exec_name: Ident = Ident::new(
+        &exec_type_name(&item_struct.ident.to_string()),
+        item_struct.span(),
+    );
 
     let exec_fields = match &item_struct.fields {
-        Fields::Named(fields_named) => {
-            Fields::Named(FieldsNamed {
-                named: fields_named.named.iter().map(|field| {
-                    Ok(Field { ty: compile_type(ctx, &field.ty)?, ..field.clone() })
-                }).collect::<Result<_, Error>>()?,
-                ..fields_named.clone()
-            })
-        }
-        Fields::Unnamed(fields_unnamed) => {
-            Fields::Unnamed(FieldsUnnamed {
-                unnamed: fields_unnamed.unnamed.iter().map(|field| {
-                    Ok(Field { ty: compile_type(ctx, &field.ty)?, ..field.clone() })
-                }).collect::<Result<_, Error>>()?,
-                ..fields_unnamed.clone()
-            })
-        }
+        Fields::Named(fields_named) => Fields::Named(FieldsNamed {
+            named: fields_named
+                .named
+                .iter()
+                .map(|field| {
+                    Ok(Field {
+                        ty: compile_type(ctx, &field.ty)?,
+                        ..field.clone()
+                    })
+                })
+                .collect::<Result<_, Error>>()?,
+            ..fields_named.clone()
+        }),
+        Fields::Unnamed(fields_unnamed) => Fields::Unnamed(FieldsUnnamed {
+            unnamed: fields_unnamed
+                .unnamed
+                .iter()
+                .map(|field| {
+                    Ok(Field {
+                        ty: compile_type(ctx, &field.ty)?,
+                        ..field.clone()
+                    })
+                })
+                .collect::<Result<_, Error>>()?,
+            ..fields_unnamed.clone()
+        }),
         Fields::Unit => Fields::Unit,
     };
 
@@ -426,12 +462,10 @@ fn compile_struct(ctx: &Context, item_struct: &ItemStruct) -> Result<(ItemStruct
             quote! { #spec_name { #(#field_views,)* } }
         }
         Fields::Unnamed(fields_unnamed) => {
-            let field_views = fields_unnamed.unnamed.iter()
-                .enumerate()
-                .map(|(i, _)| {
-                    let i = Index::from(i);
-                    quote! { self.#i.deep_view() }
-                });
+            let field_views = fields_unnamed.unnamed.iter().enumerate().map(|(i, _)| {
+                let i = Index::from(i);
+                quote! { self.#i.deep_view() }
+            });
 
             quote! { #spec_name(#(#field_views,)*) }
         }
@@ -471,49 +505,69 @@ fn compile_struct(ctx: &Context, item_struct: &ItemStruct) -> Result<(ItemStruct
             fields: exec_fields,
             ..item_struct.clone()
         },
-        view_impl
+        view_impl,
     ))
 }
 
 fn compile_enum(ctx: &Context, item_enum: &ItemEnum) -> Result<(ItemEnum, TokenStream2), Error> {
     if !item_enum.generics.params.is_empty() {
-        return Err(Error::new_spanned(&item_enum.generics, "generics not supported"));
+        return Err(Error::new_spanned(
+            &item_enum.generics,
+            "generics not supported",
+        ));
     }
 
     let spec_name = &item_enum.ident;
-    let exec_name: Ident = Ident::new(&exec_type_name(&item_enum.ident.to_string()), item_enum.span());
+    let exec_name: Ident = Ident::new(
+        &exec_type_name(&item_enum.ident.to_string()),
+        item_enum.span(),
+    );
 
     // Compile each variant
-    let exec_variants = item_enum.variants.iter().map(|variant| {
-        // // Compile all field types
-        let exec_fields = match &variant.fields {
-            Fields::Unit => Fields::Unit,
-            Fields::Named(fields_named) => {
-                Fields::Named(FieldsNamed {
-                    named: fields_named.named.iter().map(|field| {
-                        Ok(Field { ty: compile_type(ctx, &field.ty)?, ..field.clone() })
-                    }).collect::<Result<_, Error>>()?,
+    let exec_variants = item_enum
+        .variants
+        .iter()
+        .map(|variant| {
+            // // Compile all field types
+            let exec_fields = match &variant.fields {
+                Fields::Unit => Fields::Unit,
+                Fields::Named(fields_named) => Fields::Named(FieldsNamed {
+                    named: fields_named
+                        .named
+                        .iter()
+                        .map(|field| {
+                            Ok(Field {
+                                ty: compile_type(ctx, &field.ty)?,
+                                ..field.clone()
+                            })
+                        })
+                        .collect::<Result<_, Error>>()?,
 
                     ..fields_named.clone()
-                })
-            }
-            Fields::Unnamed(fields_unnamed) => {
-                Fields::Unnamed(FieldsUnnamed {
-                    unnamed: fields_unnamed.unnamed.iter().map(|field| {
-                        Ok(Field { ty: compile_type(ctx, &field.ty)?, ..field.clone() })
-                    }).collect::<Result<_, Error>>()?,
+                }),
+                Fields::Unnamed(fields_unnamed) => Fields::Unnamed(FieldsUnnamed {
+                    unnamed: fields_unnamed
+                        .unnamed
+                        .iter()
+                        .map(|field| {
+                            Ok(Field {
+                                ty: compile_type(ctx, &field.ty)?,
+                                ..field.clone()
+                            })
+                        })
+                        .collect::<Result<_, Error>>()?,
 
                     ..fields_unnamed.clone()
-                })
-            }
-        };
+                }),
+            };
 
-        Ok(Variant {
-            ident: variant.ident.clone(),
-            fields: exec_fields,
-            ..variant.clone()
+            Ok(Variant {
+                ident: variant.ident.clone(),
+                fields: exec_fields,
+                ..variant.clone()
+            })
         })
-    }).collect::<Result<_, Error>>()?;
+        .collect::<Result<_, Error>>()?;
 
     let variant_arms = item_enum.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
@@ -572,7 +626,7 @@ fn compile_enum(ctx: &Context, item_enum: &ItemEnum) -> Result<(ItemEnum, TokenS
             variants: exec_variants,
             ..item_enum.clone()
         },
-        view_impl
+        view_impl,
     ))
 }
 
@@ -582,7 +636,10 @@ fn compile_path(ctx: &Context, path: &Path) -> Result<Path, Error> {
         let name = get_simple_path_name(&path)?;
 
         if name.starts_with("_") {
-            return Err(Error::new_spanned(path, "identifiers starting with _ are unsupported"));
+            return Err(Error::new_spanned(
+                path,
+                "identifiers starting with _ are unsupported",
+            ));
         }
 
         if ctx.structs.contains_key(&name) {
@@ -600,9 +657,15 @@ fn compile_path(ctx: &Context, path: &Path) -> Result<Path, Error> {
         let name = path.segments[0].ident.to_string();
 
         if ctx.structs.contains_key(&name) {
-            Ok(path![seg!(&exec_type_name(&name)), path.segments[1].clone()])
+            Ok(path![
+                seg!(&exec_type_name(&name)),
+                path.segments[1].clone()
+            ])
         } else if ctx.enums.contains_key(&name) {
-            Ok(path![seg!(&exec_type_name(&name)), path.segments[1].clone()])
+            Ok(path![
+                seg!(&exec_type_name(&name)),
+                path.segments[1].clone()
+            ])
         } else if let Some(extern_name) = ctx.externs.get(&name) {
             Ok(path![seg!(extern_name), path.segments[1].clone()])
         } else {
@@ -620,62 +683,59 @@ fn compile_pattern(ctx: &Context, local: &mut LocalContext, pat: &Pat) -> Result
             Ok(pat.clone())
         }
 
-        Pat::Path(pat_path) =>
-            Ok(Pat::Path(PatPath {
-                path: compile_path(ctx, &pat_path.path)?,
-                ..pat_path.clone()
-            })),
+        Pat::Path(pat_path) => Ok(Pat::Path(PatPath {
+            path: compile_path(ctx, &pat_path.path)?,
+            ..pat_path.clone()
+        })),
 
-        Pat::Reference(pat_reference) =>
-            Ok(Pat::Reference(PatReference {
-                pat: Box::new(compile_pattern(ctx, local, &pat_reference.pat)?),
-                ..pat_reference.clone()
-            })),
+        Pat::Reference(pat_reference) => Ok(Pat::Reference(PatReference {
+            pat: Box::new(compile_pattern(ctx, local, &pat_reference.pat)?),
+            ..pat_reference.clone()
+        })),
 
         // TODO: infer more types
-        Pat::Type(pat_type) =>
-            Ok(Pat::Type(PatType {
-                pat: Box::new(compile_pattern(ctx, local, &pat_type.pat)?),
-                ty: Box::new(compile_type(ctx, &pat_type.ty)?),
-                ..pat_type.clone()
-            })),
+        Pat::Type(pat_type) => Ok(Pat::Type(PatType {
+            pat: Box::new(compile_pattern(ctx, local, &pat_type.pat)?),
+            ty: Box::new(compile_type(ctx, &pat_type.ty)?),
+            ..pat_type.clone()
+        })),
 
         Pat::Wild(..) => Ok(pat.clone()),
         Pat::Rest(..) => Ok(pat.clone()),
 
-        Pat::TupleStruct(pat_tuple_struct) =>
-            Ok(Pat::TupleStruct(PatTupleStruct {
-                path: compile_path(ctx, &pat_tuple_struct.path)?,
-                elems: pat_tuple_struct.elems
-                    .iter()
-                    .map(|pat| compile_pattern(ctx, local, pat))
-                    .collect::<Result<_, Error>>()?,
-                ..pat_tuple_struct.clone()
-            })),
+        Pat::TupleStruct(pat_tuple_struct) => Ok(Pat::TupleStruct(PatTupleStruct {
+            path: compile_path(ctx, &pat_tuple_struct.path)?,
+            elems: pat_tuple_struct
+                .elems
+                .iter()
+                .map(|pat| compile_pattern(ctx, local, pat))
+                .collect::<Result<_, Error>>()?,
+            ..pat_tuple_struct.clone()
+        })),
 
-        Pat::Struct(pat_struct) =>
-            Ok(Pat::Struct(PatStruct {
-                path: compile_path(ctx, &pat_struct.path)?,
-                fields: pat_struct.fields
-                    .iter()
-                    .map(|field| {
-                        Ok(FieldPat {
-                            pat: Box::new(compile_pattern(ctx, local, &field.pat)?),
-                            ..field.clone()
-                        })
+        Pat::Struct(pat_struct) => Ok(Pat::Struct(PatStruct {
+            path: compile_path(ctx, &pat_struct.path)?,
+            fields: pat_struct
+                .fields
+                .iter()
+                .map(|field| {
+                    Ok(FieldPat {
+                        pat: Box::new(compile_pattern(ctx, local, &field.pat)?),
+                        ..field.clone()
                     })
-                    .collect::<Result<_, Error>>()?,
-                ..pat_struct.clone()
-            })),
+                })
+                .collect::<Result<_, Error>>()?,
+            ..pat_struct.clone()
+        })),
 
-        Pat::Tuple(pat_tuple) =>
-            Ok(Pat::Tuple(PatTuple {
-                elems: pat_tuple.elems
-                    .iter()
-                    .map(|pat| compile_pattern(ctx, local, pat))
-                    .collect::<Result<_, Error>>()?,
-                ..pat_tuple.clone()
-            })),
+        Pat::Tuple(pat_tuple) => Ok(Pat::Tuple(PatTuple {
+            elems: pat_tuple
+                .elems
+                .iter()
+                .map(|pat| compile_pattern(ctx, local, pat))
+                .collect::<Result<_, Error>>()?,
+            ..pat_tuple.clone()
+        })),
 
         // TODO: maybe?
         // Pat::TupleStruct(pat_tuple_struct) => todo!(),
@@ -683,7 +743,6 @@ fn compile_pattern(ctx: &Context, local: &mut LocalContext, pat: &Pat) -> Result
         // Pat::Or(pat_or) => todo!(),
         // Pat::Macro(pat_macro) => todo!(),
         // Pat::Lit(pat_lit) => todo!(),
-
         _ => Err(Error::new_spanned(pat, "unsupported pattern")),
     }
 }
@@ -715,28 +774,44 @@ struct GuardedQuantifier {
 
 /// Parse the closure as |i| x <= i < y ==>/&& body
 /// and return (i, x, y, body)
-fn get_guarded_quantifier(closure: &ExprClosure, is_forall: bool) -> Result<GuardedQuantifier, Error>
-{
+fn get_guarded_quantifier(
+    closure: &ExprClosure,
+    is_forall: bool,
+) -> Result<GuardedQuantifier, Error> {
     if closure.inputs.len() != 1 {
-        return Err(Error::new_spanned(closure, "only support single quantified variable"));
+        return Err(Error::new_spanned(
+            closure,
+            "only support single quantified variable",
+        ));
     }
 
     let (quant_var, Some(quant_type)) = get_simple_pat(&closure.inputs[0].pat)? else {
-        return Err(Error::new_spanned(closure, "only supports a typed variable as quantifier"));
+        return Err(Error::new_spanned(
+            closure,
+            "only supports a typed variable as quantifier",
+        ));
     };
 
     // |x| <guard> ==>/&& <body>
     let (guard, body) = if is_forall {
         let Expr::Binary(ExprBinary {
-            left: guard, op: BinOp::Imply(..), right: body, ..
-        }) = closure.body.as_ref() else {
+            left: guard,
+            op: BinOp::Imply(..),
+            right: body,
+            ..
+        }) = closure.body.as_ref()
+        else {
             return Err(Error::new_spanned(closure, "unsupported forall expression"));
         };
         (guard, body)
     } else {
         let Expr::Binary(ExprBinary {
-            left: guard, op: BinOp::And(..), right: body, ..
-        }) = closure.body.as_ref() else {
+            left: guard,
+            op: BinOp::And(..),
+            right: body,
+            ..
+        }) = closure.body.as_ref()
+        else {
             return Err(Error::new_spanned(closure, "unsupported forall expression"));
         };
         (guard, body)
@@ -744,21 +819,38 @@ fn get_guarded_quantifier(closure: &ExprClosure, is_forall: bool) -> Result<Guar
 
     // <guard> == <lower> <= x < <upper>
     let Expr::Binary(ExprBinary {
-        left: lower_guard, op: BinOp::Lt(..), right: upper, ..
-    }) = guard.as_ref() else {
-        return Err(Error::new_spanned(guard, "unsupported forall guard upper bound"));
+        left: lower_guard,
+        op: BinOp::Lt(..),
+        right: upper,
+        ..
+    }) = guard.as_ref()
+    else {
+        return Err(Error::new_spanned(
+            guard,
+            "unsupported forall guard upper bound",
+        ));
     };
 
     let Expr::Binary(ExprBinary {
-        left: lower, op: BinOp::Le(..), right: guard_var, ..
-    }) = lower_guard.as_ref() else {
-        return Err(Error::new_spanned(lower_guard, "unsupported forall guard lower bound"));
+        left: lower,
+        op: BinOp::Le(..),
+        right: guard_var,
+        ..
+    }) = lower_guard.as_ref()
+    else {
+        return Err(Error::new_spanned(
+            lower_guard,
+            "unsupported forall guard lower bound",
+        ));
     };
 
     let guard_var = get_simple_var(guard_var)?;
 
     if guard_var != quant_var {
-        return Err(Error::new_spanned(guard_var, "quantified variable does not match the guard variable"));
+        return Err(Error::new_spanned(
+            guard_var,
+            "quantified variable does not match the guard variable",
+        ));
     }
 
     Ok(GuardedQuantifier {
@@ -789,8 +881,7 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
         // them with custom operations implemented in verdict_rspec_lib::*
         //
         // TODO: filter unsupported ops
-        Expr::Binary(expr_binary) =>
-            match &expr_binary.op {
+        Expr::Binary(expr_binary) => match &expr_binary.op {
                 BinOp::Eq(..) =>
                     Ok(expr_call!(
                         expr_path![seg!("verdict_rspec_lib"), seg!("RSpec"), seg!("eq")],
@@ -820,208 +911,224 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
                     right: Box::new(compile_expr(ctx, local, &expr_binary.right)?),
                     ..expr_binary.clone()
                 }))
-            }
+            },
 
-        Expr::Unary(expr_unary) =>
-            match &expr_unary.op {
-                UnOp::Forall(..) | UnOp::Exists(..) => {
-                    let Expr::Closure(closure) = expr_unary.expr.as_ref() else {
-                        return Err(Error::new_spanned(expr, "ill-formed forall expression"));
-                    };
+        Expr::Unary(expr_unary) => match &expr_unary.op {
+            UnOp::Forall(..) | UnOp::Exists(..) => {
+                let Expr::Closure(closure) = expr_unary.expr.as_ref() else {
+                    return Err(Error::new_spanned(expr, "ill-formed forall expression"));
+                };
 
-                    let is_forall = if let UnOp::Forall(..) = &expr_unary.op { true } else { false };
+                let is_forall = if let UnOp::Forall(..) = &expr_unary.op {
+                    true
+                } else {
+                    false
+                };
 
-                    let guarded_quant = get_guarded_quantifier(closure, is_forall)?;
+                let guarded_quant = get_guarded_quantifier(closure, is_forall)?;
 
-                    // Bind the quantifier
-                    let mut local = local.clone();
-                    local.vars.insert(guarded_quant.quant_var.to_string(), Some(guarded_quant.quant_type.clone()));
+                // Bind the quantifier
+                let mut local = local.clone();
+                local.vars.insert(
+                    guarded_quant.quant_var.to_string(),
+                    Some(guarded_quant.quant_type.clone()),
+                );
 
-                    let quant_var = &guarded_quant.quant_var;
-                    let quant_type = &guarded_quant.quant_type;
-                    let body = &guarded_quant.body;
-                    let compiled_lower = compile_expr(ctx, &local, guarded_quant.lower.as_ref())?;
-                    let compiled_upper = compile_expr(ctx, &local, guarded_quant.upper.as_ref())?;
-                    let compiled_body = compile_expr(ctx, &local, guarded_quant.body.as_ref())?;
-                    // println!("closure: {}", quote! { #body });
+                let quant_var = &guarded_quant.quant_var;
+                let quant_type = &guarded_quant.quant_type;
+                let body = &guarded_quant.body;
+                let compiled_lower = compile_expr(ctx, &local, guarded_quant.lower.as_ref())?;
+                let compiled_upper = compile_expr(ctx, &local, guarded_quant.upper.as_ref())?;
+                let compiled_body = compile_expr(ctx, &local, guarded_quant.body.as_ref())?;
+                // println!("closure: {}", quote! { #body });
 
-                    let quant_attrs = closure.inner_attrs.clone();
+                let quant_attrs = closure.inner_attrs.clone();
 
-                    // Since #body and #expr will be used as spec code in exec mode
-                    // we have to convert all variables in the context to their spec versions via deep_view
-                    let local_view: Vec<TokenStream2> = local.vars.iter().map(|(name, _)| {
+                // Since #body and #expr will be used as spec code in exec mode
+                // we have to convert all variables in the context to their spec versions via deep_view
+                let local_view: Vec<TokenStream2> = local
+                    .vars
+                    .iter()
+                    .map(|(name, _)| {
                         let name = Ident::new(name, expr.span());
                         quote! { let #name = #name.deep_view(); }
-                    }).collect();
+                    })
+                    .collect();
 
-                    let compiled = if is_forall {
-                        quote! {
-                            {
-                                let _lower = #compiled_lower;
-                                let _upper = #compiled_upper;
-                                let mut _res = true;
-                                let mut #quant_var = _lower;
+                let compiled = if is_forall {
+                    quote! {
+                        {
+                            let _lower = #compiled_lower;
+                            let _upper = #compiled_upper;
+                            let mut _res = true;
+                            let mut #quant_var = _lower;
 
-                                if _lower < _upper {
-                                    while #quant_var < _upper
-                                        invariant
-                                            _lower <= #quant_var <= _upper,
-                                            _res == {
-                                                let _upper = #quant_var;
-                                                #(#local_view)*
-                                                forall |#quant_var: #quant_type| #(#quant_attrs)* !(_lower <= #quant_var < _upper) || (#body)
-                                            },
-                                    {
-                                        if !(#compiled_body) {
-                                            // For triggering the quantifier
-                                            assert({ #(#local_view)* !(#body) });
-                                            _res = false;
-                                            break;
-                                        }
-                                        #quant_var += 1;
+                            if _lower < _upper {
+                                while #quant_var < _upper
+                                    invariant
+                                        _lower <= #quant_var <= _upper,
+                                        _res == {
+                                            let _upper = #quant_var;
+                                            #(#local_view)*
+                                            forall |#quant_var: #quant_type| #(#quant_attrs)* !(_lower <= #quant_var < _upper) || (#body)
+                                        },
+                                {
+                                    if !(#compiled_body) {
+                                        // For triggering the quantifier
+                                        assert({ #(#local_view)* !(#body) });
+                                        _res = false;
+                                        break;
                                     }
+                                    #quant_var += 1;
                                 }
-                                assert(_res == { #(#local_view)* (#expr) });
-                                _res
                             }
+                            assert(_res == { #(#local_view)* (#expr) });
+                            _res
                         }
-                    } else {
-                        // exists
-                        quote! {
-                            {
-                                let _lower = #compiled_lower;
-                                let _upper = #compiled_upper;
-                                let mut _res = false;
-                                let mut #quant_var = _lower;
+                    }
+                } else {
+                    // exists
+                    quote! {
+                        {
+                            let _lower = #compiled_lower;
+                            let _upper = #compiled_upper;
+                            let mut _res = false;
+                            let mut #quant_var = _lower;
 
-                                if _lower < _upper {
-                                    while #quant_var < _upper
-                                        invariant
-                                            _lower <= #quant_var <= _upper,
-                                            _res == {
-                                                let _upper = #quant_var;
-                                                #(#local_view)*
-                                                exists |#quant_var: #quant_type| #(#quant_attrs)* (_lower <= #quant_var < _upper) && (#body)
-                                            },
-                                    {
-                                        if (#compiled_body) {
-                                            // For triggering the quantifier
-                                            assert({ #(#local_view)* (#body) });
-                                            _res = true;
-                                            break;
-                                        }
-                                        #quant_var += 1;
+                            if _lower < _upper {
+                                while #quant_var < _upper
+                                    invariant
+                                        _lower <= #quant_var <= _upper,
+                                        _res == {
+                                            let _upper = #quant_var;
+                                            #(#local_view)*
+                                            exists |#quant_var: #quant_type| #(#quant_attrs)* (_lower <= #quant_var < _upper) && (#body)
+                                        },
+                                {
+                                    if (#compiled_body) {
+                                        // For triggering the quantifier
+                                        assert({ #(#local_view)* (#body) });
+                                        _res = true;
+                                        break;
                                     }
+                                    #quant_var += 1;
                                 }
-                                assert(_res == { #(#local_view)* (#expr) });
-                                _res
                             }
+                            assert(_res == { #(#local_view)* (#expr) });
+                            _res
                         }
-                    };
+                    }
+                };
 
-                    // println!("compiled: {}", quote! { #compiled });
+                // println!("compiled: {}", quote! { #compiled });
 
-                    syn_verus::parse2(compiled)
-                        .map_err(|e| Error::new_spanned(expr, format!("internally generated code syntax error: {}", e)))
-                }
-
-                // TODO: filter unsupported ops
-                UnOp::Deref(..) | UnOp::Neg(..) | UnOp::Not(..) =>
-                    Ok(Expr::Unary(ExprUnary {
-                        attrs: Vec::new(),
-                        expr: Box::new(compile_expr(ctx, local, &expr_unary.expr)?),
-                        ..expr_unary.clone()
-                    })),
-
-                _ => Err(Error::new_spanned(expr, "unsupported unary operator")),
+                syn_verus::parse2(compiled).map_err(|e| {
+                    Error::new_spanned(
+                        expr,
+                        format!("internally generated code syntax error: {}", e),
+                    )
+                })
             }
 
-        Expr::Paren(expr_paren) =>
-            Ok(Expr::Paren(ExprParen {
+            // TODO: filter unsupported ops
+            UnOp::Deref(..) | UnOp::Neg(..) | UnOp::Not(..) => Ok(Expr::Unary(ExprUnary {
                 attrs: Vec::new(),
-                expr: Box::new(compile_expr(ctx, local, &expr_paren.expr)?),
-                ..expr_paren.clone()
+                expr: Box::new(compile_expr(ctx, local, &expr_unary.expr)?),
+                ..expr_unary.clone()
             })),
 
-        Expr::Block(expr_block) =>
-            Ok(Expr::Block(ExprBlock {
-                attrs: Vec::new(),
-                block: compile_block(ctx, local, &expr_block.block)?,
-                ..expr_block.clone()
-            })),
+            _ => Err(Error::new_spanned(expr, "unsupported unary operator")),
+        },
 
-        Expr::BigAnd(big_and) =>
-            Ok(Expr::BigAnd(BigAnd {
-                exprs: big_and.exprs
-                    .iter()
-                    .map(|big_and|
-                        Ok(BigAndExpr {
-                            expr: Box::new(compile_expr(ctx, local, &big_and.expr)?),
-                            ..big_and.clone()
-                        }))
-                    .collect::<Result<_, Error>>()?,
-            })),
+        Expr::Paren(expr_paren) => Ok(Expr::Paren(ExprParen {
+            attrs: Vec::new(),
+            expr: Box::new(compile_expr(ctx, local, &expr_paren.expr)?),
+            ..expr_paren.clone()
+        })),
 
-        Expr::BigOr(big_or) =>
-            Ok(Expr::BigOr(BigOr {
-                exprs: big_or.exprs
-                    .iter()
-                    .map(|big_or|
-                        Ok(BigOrExpr {
-                            expr: Box::new(compile_expr(ctx, local, &big_or.expr)?),
-                            ..big_or.clone()
-                        }))
-                    .collect::<Result<_, Error>>()?,
-            })),
+        Expr::Block(expr_block) => Ok(Expr::Block(ExprBlock {
+            attrs: Vec::new(),
+            block: compile_block(ctx, local, &expr_block.block)?,
+            ..expr_block.clone()
+        })),
 
-        Expr::If(expr_if) =>
-            Ok(Expr::If(ExprIf {
-                attrs: Vec::new(),
-                cond: Box::new(compile_expr(ctx, local, &expr_if.cond)?),
-                then_branch: compile_block(ctx, local, &expr_if.then_branch)?,
-                else_branch: if let Some((tok, expr)) = &expr_if.else_branch {
-                    Some((tok.clone(), Box::new(compile_expr(ctx, local, expr)?)))
-                } else {
-                    return Err(Error::new_spanned(expr, "unsupported if statement without else branch"));
-                },
-                ..expr_if.clone()
-            })),
+        Expr::BigAnd(big_and) => Ok(Expr::BigAnd(BigAnd {
+            exprs: big_and
+                .exprs
+                .iter()
+                .map(|big_and| {
+                    Ok(BigAndExpr {
+                        expr: Box::new(compile_expr(ctx, local, &big_and.expr)?),
+                        ..big_and.clone()
+                    })
+                })
+                .collect::<Result<_, Error>>()?,
+        })),
+
+        Expr::BigOr(big_or) => Ok(Expr::BigOr(BigOr {
+            exprs: big_or
+                .exprs
+                .iter()
+                .map(|big_or| {
+                    Ok(BigOrExpr {
+                        expr: Box::new(compile_expr(ctx, local, &big_or.expr)?),
+                        ..big_or.clone()
+                    })
+                })
+                .collect::<Result<_, Error>>()?,
+        })),
+
+        Expr::If(expr_if) => Ok(Expr::If(ExprIf {
+            attrs: Vec::new(),
+            cond: Box::new(compile_expr(ctx, local, &expr_if.cond)?),
+            then_branch: compile_block(ctx, local, &expr_if.then_branch)?,
+            else_branch: if let Some((tok, expr)) = &expr_if.else_branch {
+                Some((tok.clone(), Box::new(compile_expr(ctx, local, expr)?)))
+            } else {
+                return Err(Error::new_spanned(
+                    expr,
+                    "unsupported if statement without else branch",
+                ));
+            },
+            ..expr_if.clone()
+        })),
 
         // For field expressions, wrap the result in a reference
-        Expr::Field(expr_field) =>
-            Ok(Expr::Field(ExprField {
-                attrs: Vec::new(),
-                base: Box::new(compile_expr(ctx, local, &expr_field.base)?),
-                ..expr_field.clone()
-            })),
+        Expr::Field(expr_field) => Ok(Expr::Field(ExprField {
+            attrs: Vec::new(),
+            base: Box::new(compile_expr(ctx, local, &expr_field.base)?),
+            ..expr_field.clone()
+        })),
 
         // Rewrite `<string literal>@` to `<string literal>.to_string()`
         // but throws an error on anything else
-        Expr::View(view) =>
-            match view.expr.as_ref() {
-                Expr::Lit(ExprLit { lit: Lit::Str(..), .. }) =>
-                    Ok(expr_method_call!(
-                        view.expr.as_ref().clone(),
-                        "to_string"
-                    )),
-                _ => Err(Error::new_spanned(view, "only string literals are supported for view expression (@)")),
-            }
+        Expr::View(view) => match view.expr.as_ref() {
+            Expr::Lit(ExprLit {
+                lit: Lit::Str(..), ..
+            }) => Ok(expr_method_call!(view.expr.as_ref().clone(), "to_string")),
+            _ => Err(Error::new_spanned(
+                view,
+                "only string literals are supported for view expression (@)",
+            )),
+        },
 
         // TODO: filter unsupported calls
-        Expr::Call(expr_call) =>
-            Ok(Expr::Call(ExprCall {
-                attrs: Vec::new(),
-                func: Box::new(compile_expr(ctx, local, &expr_call.func)?),
-                args: expr_call.args.iter().map(|arg| compile_expr(ctx, local, arg)).collect::<Result<_, Error>>()?,
-                ..expr_call.clone()
-            })),
+        Expr::Call(expr_call) => Ok(Expr::Call(ExprCall {
+            attrs: Vec::new(),
+            func: Box::new(compile_expr(ctx, local, &expr_call.func)?),
+            args: expr_call
+                .args
+                .iter()
+                .map(|arg| compile_expr(ctx, local, arg))
+                .collect::<Result<_, Error>>()?,
+            ..expr_call.clone()
+        })),
 
-        Expr::Index(expr_index) =>
-            Ok(expr_method_call!(
-                compile_expr(ctx, local, &expr_index.expr)?,
-                "rspec_index",
-                compile_expr(ctx, local, &expr_index.index)?,
-            )),
+        Expr::Index(expr_index) => Ok(expr_method_call!(
+            compile_expr(ctx, local, &expr_index.expr)?,
+            "rspec_index",
+            compile_expr(ctx, local, &expr_index.index)?,
+        )),
 
         // TODO: more methods
         Expr::MethodCall(expr_method_call) => {
@@ -1030,7 +1137,10 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
             match name.as_str() {
                 "len" => {
                     if expr_method_call.args.len() != 0 {
-                        return Err(Error::new_spanned(expr, "len method call should not have arguments"));
+                        return Err(Error::new_spanned(
+                            expr,
+                            "len method call should not have arguments",
+                        ));
                     }
 
                     Ok(expr_method_call!(
@@ -1041,7 +1151,10 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
 
                 "char_at" => {
                     if expr_method_call.args.len() != 1 {
-                        return Err(Error::new_spanned(expr, "char_at method call should have a single argument"));
+                        return Err(Error::new_spanned(
+                            expr,
+                            "char_at method call should have a single argument",
+                        ));
                     }
 
                     Ok(expr_method_call!(
@@ -1053,7 +1166,10 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
 
                 "has_char" => {
                     if expr_method_call.args.len() != 1 {
-                        return Err(Error::new_spanned(expr, "has_char method call should have a single argument"));
+                        return Err(Error::new_spanned(
+                            expr,
+                            "has_char method call should have a single argument",
+                        ));
                     }
 
                     Ok(expr_method_call!(
@@ -1065,7 +1181,10 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
 
                 "skip" => {
                     if expr_method_call.args.len() != 1 {
-                        return Err(Error::new_spanned(expr, "skip method call should have a single argument"));
+                        return Err(Error::new_spanned(
+                            expr,
+                            "skip method call should have a single argument",
+                        ));
                     }
 
                     Ok(expr_method_call!(
@@ -1077,7 +1196,10 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
 
                 "take" => {
                     if expr_method_call.args.len() != 1 {
-                        return Err(Error::new_spanned(expr, "take method call should have a single argument"));
+                        return Err(Error::new_spanned(
+                            expr,
+                            "take method call should have a single argument",
+                        ));
                     }
 
                     Ok(expr_method_call!(
@@ -1091,20 +1213,26 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
             }
         }
 
-        Expr::Match(expr_match) =>
-            Ok(Expr::Match(ExprMatch {
-                attrs: Vec::new(),
-                expr: Box::new(compile_expr(ctx, local, &expr_match.expr)?),
-                arms: expr_match.arms.iter().map(|arm| compile_match_arm(ctx, local, arm)).collect::<Result<_, Error>>()?,
-                ..expr_match.clone()
-            })),
+        Expr::Match(expr_match) => Ok(Expr::Match(ExprMatch {
+            attrs: Vec::new(),
+            expr: Box::new(compile_expr(ctx, local, &expr_match.expr)?),
+            arms: expr_match
+                .arms
+                .iter()
+                .map(|arm| compile_match_arm(ctx, local, arm))
+                .collect::<Result<_, Error>>()?,
+            ..expr_match.clone()
+        })),
 
-        Expr::Tuple(expr_tuple) =>
-            Ok(Expr::Tuple(ExprTuple {
-                attrs: Vec::new(),
-                elems: expr_tuple.elems.iter().map(|expr| compile_expr(ctx, local, expr)).collect::<Result<_, Error>>()?,
-                ..expr_tuple.clone()
-            })),
+        Expr::Tuple(expr_tuple) => Ok(Expr::Tuple(ExprTuple {
+            attrs: Vec::new(),
+            elems: expr_tuple
+                .elems
+                .iter()
+                .map(|expr| compile_expr(ctx, local, expr))
+                .collect::<Result<_, Error>>()?,
+            ..expr_tuple.clone()
+        })),
 
         Expr::Matches(ExprMatches {
             lhs, pat, op_expr, ..
@@ -1122,30 +1250,32 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
                 brace_token: Default::default(),
                 arms: vec![
                     if let Some(MatchesOpExpr { rhs, .. }) = op_expr {
-                        arm!(pat, Expr::Block(ExprBlock {
-                            attrs: Vec::new(),
-                            label: None,
-                            block: Block {
-                                brace_token: Default::default(),
-                                stmts: vec![
-                                    Stmt::Expr(compile_expr(ctx, &local, rhs)?, None),
-                                ],
-                            }
-                        }))
+                        arm!(
+                            pat,
+                            Expr::Block(ExprBlock {
+                                attrs: Vec::new(),
+                                label: None,
+                                block: Block {
+                                    brace_token: Default::default(),
+                                    stmts: vec![Stmt::Expr(compile_expr(ctx, &local, rhs)?, None),],
+                                }
+                            })
+                        )
                     } else {
                         // If no RHS, use true
                         arm!(pat, expr_bool_lit!(true))
                     },
-
                     arm!(
-                        Pat::Wild(PatWild { attrs: Vec::new(), underscore_token: Default::default() }),
+                        Pat::Wild(PatWild {
+                            attrs: Vec::new(),
+                            underscore_token: Default::default()
+                        }),
                         expr_bool_lit!(match op_expr {
-                            Some(MatchesOpExpr { op_token, .. }) =>
-                                match op_token {
-                                    MatchesOpToken::Implies(..) => true,
-                                    MatchesOpToken::AndAnd(..) => false,
-                                    MatchesOpToken::BigAnd => false,
-                                }
+                            Some(MatchesOpExpr { op_token, .. }) => match op_token {
+                                MatchesOpToken::Implies(..) => true,
+                                MatchesOpToken::AndAnd(..) => false,
+                                MatchesOpToken::BigAnd => false,
+                            },
                             None => false,
                         }),
                     ),
@@ -1163,43 +1293,42 @@ fn compile_expr(ctx: &Context, local: &LocalContext, expr: &Expr) -> Result<Expr
         // Expr::Has(expr_has) => todo!(),
         // Expr::GetField(expr_get_field) => todo!(),
         // Expr::Cast(expr_cast) => todo!(),
-
-        Expr::Cast(expr_cast) =>
-            match compile_type(ctx, &expr_cast.ty) {
-                // `as <t>` for a supported t will be converted
-                Ok(ty) => Ok(Expr::Cast(ExprCast {
-                    attrs: Vec::new(),
-                    expr: Box::new(compile_expr(ctx, local, &expr_cast.expr)?),
-                    ty: Box::new(ty),
-                    ..expr_cast.clone()
-                })),
-
-                // Unsupported <T> will be ignored
-                // TODO: is this ok?
-                Err(_) => compile_expr(ctx, local, &expr_cast.expr),
-            }
-
-        Expr::Reference(expr_reference) =>
-            Ok(Expr::Reference(ExprReference {
+        Expr::Cast(expr_cast) => match compile_type(ctx, &expr_cast.ty) {
+            // `as <t>` for a supported t will be converted
+            Ok(ty) => Ok(Expr::Cast(ExprCast {
                 attrs: Vec::new(),
-                expr: Box::new(compile_expr(ctx, local, &expr_reference.expr)?),
-                ..expr_reference.clone()
+                expr: Box::new(compile_expr(ctx, local, &expr_cast.expr)?),
+                ty: Box::new(ty),
+                ..expr_cast.clone()
             })),
 
-        Expr::Lit(lit) =>
-            match &lit.lit {
-                Lit::Str(..) | Lit::Byte(..) | Lit::Char(..) | Lit::Int(..) | Lit::Float(..) | Lit::Bool(..) =>
-                    Ok(expr.clone()),
+            // Unsupported <T> will be ignored
+            // TODO: is this ok?
+            Err(_) => compile_expr(ctx, local, &expr_cast.expr),
+        },
 
-                _ => Err(Error::new_spanned(lit, "unsupported literal")),
-            }
+        Expr::Reference(expr_reference) => Ok(Expr::Reference(ExprReference {
+            attrs: Vec::new(),
+            expr: Box::new(compile_expr(ctx, local, &expr_reference.expr)?),
+            ..expr_reference.clone()
+        })),
+
+        Expr::Lit(lit) => match &lit.lit {
+            Lit::Str(..)
+            | Lit::Byte(..)
+            | Lit::Char(..)
+            | Lit::Int(..)
+            | Lit::Float(..)
+            | Lit::Bool(..) => Ok(expr.clone()),
+
+            _ => Err(Error::new_spanned(lit, "unsupported literal")),
+        },
 
         Expr::Macro(..) => Ok(expr.clone()),
-        Expr::Path(path) =>
-            Ok(Expr::Path(ExprPath {
-                path: compile_path(ctx, &path.path)?,
-                ..path.clone()
-            })),
+        Expr::Path(path) => Ok(Expr::Path(ExprPath {
+            path: compile_path(ctx, &path.path)?,
+            ..path.clone()
+        })),
 
         _ => Err(Error::new_spanned(expr, "unsupported expression")),
     }
@@ -1215,7 +1344,10 @@ fn compile_block(ctx: &Context, local: &LocalContext, block: &Block) -> Result<B
                 let (var, _) = get_simple_pat(&binding.pat)?;
 
                 let Some(local_init) = &binding.init else {
-                    return Err(Error::new_spanned(stmt, "unsupported let statement without initializer"));
+                    return Err(Error::new_spanned(
+                        stmt,
+                        "unsupported let statement without initializer",
+                    ));
                 };
 
                 stmts.push(Stmt::Local(Local {
@@ -1230,8 +1362,10 @@ fn compile_block(ctx: &Context, local: &LocalContext, block: &Block) -> Result<B
                 local.vars.insert(var.to_string(), None);
             }
 
-            Stmt::Expr(expr, semi_token) =>
-                stmts.push(Stmt::Expr(compile_expr(ctx, &local, expr)?, semi_token.clone())),
+            Stmt::Expr(expr, semi_token) => stmts.push(Stmt::Expr(
+                compile_expr(ctx, &local, expr)?,
+                semi_token.clone(),
+            )),
 
             _ => return Err(Error::new_spanned(stmt, "unsupported statement")),
         }
@@ -1245,19 +1379,23 @@ fn compile_block(ctx: &Context, local: &LocalContext, block: &Block) -> Result<B
 
 fn compile_signature(ctx: &Context, sig: &Signature) -> Result<Signature, Error> {
     // Change each parameter to the reference of the exec type
-    let params = sig.inputs.iter().map(|param| {
-        if let FnArgKind::Typed(pat_type) = &param.kind {
-            Ok(FnArg {
-                kind: FnArgKind::Typed(PatType {
-                    ty: Box::new(compile_type(ctx, &pat_type.ty)?),
-                    ..pat_type.clone()
-                }),
-                ..param.clone()
-            })
-        } else {
-            Err(Error::new_spanned(sig, "unsupported parameter type"))
-        }
-    }).collect::<Result<_, Error>>()?;
+    let params = sig
+        .inputs
+        .iter()
+        .map(|param| {
+            if let FnArgKind::Typed(pat_type) = &param.kind {
+                Ok(FnArg {
+                    kind: FnArgKind::Typed(PatType {
+                        ty: Box::new(compile_type(ctx, &pat_type.ty)?),
+                        ..pat_type.clone()
+                    }),
+                    ..param.clone()
+                })
+            } else {
+                Err(Error::new_spanned(sig, "unsupported parameter type"))
+            }
+        })
+        .collect::<Result<_, Error>>()?;
 
     // Change the return type to the reference of the exec type
     let return_type = match &sig.output {
@@ -1291,12 +1429,13 @@ fn compile_signature(ctx: &Context, sig: &Signature) -> Result<Signature, Error>
     // _res@ == spec_fn(<views of inputs, with references if necessary>)
 
     // Generate the argument list
-    let args = sig.inputs.iter().map(|param| {
+    let args = sig
+        .inputs
+        .iter()
+        .map(|param| {
             // Check if the function arguments fits the correct form
             // i.e. <ident>: <ty>
-            if let FnArgKind::Typed(PatType {
-                pat, ty, ..
-            }) = &param.kind {
+            if let FnArgKind::Typed(PatType { pat, ty, .. }) = &param.kind {
                 let (ident, _) = get_simple_pat(pat)?;
                 let view = expr_view!(expr_path![seg!(&ident.to_string())]);
 
@@ -1310,7 +1449,8 @@ fn compile_signature(ctx: &Context, sig: &Signature) -> Result<Signature, Error>
             }
 
             Err(Error::new_spanned(sig, "unsupported parameter type"))
-        }).collect::<Result<_, Error>>()?;
+        })
+        .collect::<Result<_, Error>>()?;
 
     // Generate the final ensure expression
     let ensure_expr = expr_binary!(
@@ -1345,13 +1485,18 @@ fn compile_signature(ctx: &Context, sig: &Signature) -> Result<Signature, Error>
 fn compile_spec_fn(ctx: &Context, item_fn: &ItemFn, trace: bool) -> Result<ItemFn, Error> {
     // Initialize the local context with the function arguments
     let local = LocalContext {
-        vars: item_fn.sig.inputs
+        vars: item_fn
+            .sig
+            .inputs
             .iter()
             .map(|param| {
                 if let FnArgKind::Typed(PatType { pat, ty, .. }) = &param.kind {
                     Ok((get_simple_pat(pat)?.0.to_string(), Some(ty.clone())))
                 } else {
-                    Err(Error::new_spanned(&item_fn.sig, "unsupported parameter type"))
+                    Err(Error::new_spanned(
+                        &item_fn.sig,
+                        "unsupported parameter type",
+                    ))
                 }
             })
             .collect::<Result<_, Error>>()?,
@@ -1388,22 +1533,26 @@ fn compile_spec_fn(ctx: &Context, item_fn: &ItemFn, trace: bool) -> Result<ItemF
                     }),
                     semi_token: Default::default(),
                 }),
-
                 // rspec_trace_result("fn_name", _res)
-                Stmt::Expr(expr_call!(
-                    expr_path![seg!("verdict_rspec_lib"), seg!("rspec_trace_result")],
-                    Expr::Lit(ExprLit {
-                        attrs: Vec::new(),
-                        lit: Lit::Str(LitStr::new(&item_fn.sig.ident.to_string(), item_fn.sig.ident.span())),
-                    }),
-                    Expr::Reference(ExprReference {
-                        attrs: Vec::new(),
-                        and_token: Default::default(),
-                        mutability: None,
-                        expr: Box::new(expr_path![seg!("_res")]),
-                    }),
-                ), Some(Default::default())),
-
+                Stmt::Expr(
+                    expr_call!(
+                        expr_path![seg!("verdict_rspec_lib"), seg!("rspec_trace_result")],
+                        Expr::Lit(ExprLit {
+                            attrs: Vec::new(),
+                            lit: Lit::Str(LitStr::new(
+                                &item_fn.sig.ident.to_string(),
+                                item_fn.sig.ident.span()
+                            )),
+                        }),
+                        Expr::Reference(ExprReference {
+                            attrs: Vec::new(),
+                            and_token: Default::default(),
+                            mutability: None,
+                            expr: Box::new(expr_path![seg!("_res")]),
+                        }),
+                    ),
+                    Some(Default::default()),
+                ),
                 // _res
                 Stmt::Expr(expr_path!(seg!("_res")), None),
             ],
@@ -1435,7 +1584,12 @@ fn compile_rspec(items: Items, trace: bool) -> Result<TokenStream2, Error> {
             Item::Fn(item_fn) => {
                 match &item_fn.sig.mode {
                     FnMode::Spec(..) => {}
-                    _ => return Err(Error::new_spanned(item_fn, "only spec functions are supported")),
+                    _ => {
+                        return Err(Error::new_spanned(
+                            item_fn,
+                            "only spec functions are supported",
+                        ))
+                    }
                 }
 
                 output.push(quote! { #item_fn });
@@ -1444,7 +1598,8 @@ fn compile_rspec(items: Items, trace: bool) -> Result<TokenStream2, Error> {
 
             Item::Struct(item_struct) => {
                 output.push(quote! { #item_struct });
-                ctx.structs.insert(item_struct.ident.to_string(), item_struct);
+                ctx.structs
+                    .insert(item_struct.ident.to_string(), item_struct);
             }
 
             Item::Enum(item_enum) => {
@@ -1551,5 +1706,6 @@ pub fn test_rspec(input: TokenStream) -> TokenStream {
             use super::*;
             verus! { rspec! { #(#items)* } }
         }
-    }.into()
+    }
+    .into()
 }

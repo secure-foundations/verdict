@@ -13,7 +13,7 @@ impl Harness for FirefoxHarness {
     /// Spawns a child process to run cert_bench
     fn spawn(&self, roots_path: &str, timestamp: u64) -> Result<Box<dyn Instance>, Error> {
         let mut bin_path = PathBuf::from(&self.repo);
-        bin_path.extend([ "cert_bench.sh" ]);
+        bin_path.extend(["cert_bench.sh"]);
 
         if !bin_path.exists() {
             return Err(Error::FirefoxRepoNotFound(bin_path.display().to_string()));

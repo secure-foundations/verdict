@@ -1,5 +1,5 @@
-use vstd::prelude::*;
 use super::*;
+use vstd::prelude::*;
 
 verus! {
 
@@ -594,12 +594,17 @@ mod test {
 
     #[test]
     fn parse_and_serialize() {
-        assert_eq!(VarUInt(0).parse(&[ 1, 2, 3 ]).unwrap(), (0, 0));
-        assert_eq!(VarUInt(8).parse(&[ 0xff, 0x8f, 0x28, 0, 0, 0, 0, 0 ]).unwrap(), (8, 0xff8f_2800_0000_0000));
-        assert_eq!(VarInt(0).parse(&[ 0x7f ]).unwrap(), (0, 0));
-        assert_eq!(VarInt(1).parse(&[ 0xff ]).unwrap(), (1, -1));
-        assert_eq!(VarInt(2).parse(&[ 0x7f, 0xff ]).unwrap(), (2, 0x7fff));
-        assert_eq!(VarInt(2).parse(&[ 0x80, 0x00 ]).unwrap(), (2, -32768));
+        assert_eq!(VarUInt(0).parse(&[1, 2, 3]).unwrap(), (0, 0));
+        assert_eq!(
+            VarUInt(8)
+                .parse(&[0xff, 0x8f, 0x28, 0, 0, 0, 0, 0])
+                .unwrap(),
+            (8, 0xff8f_2800_0000_0000)
+        );
+        assert_eq!(VarInt(0).parse(&[0x7f]).unwrap(), (0, 0));
+        assert_eq!(VarInt(1).parse(&[0xff]).unwrap(), (1, -1));
+        assert_eq!(VarInt(2).parse(&[0x7f, 0xff]).unwrap(), (2, 0x7fff));
+        assert_eq!(VarInt(2).parse(&[0x80, 0x00]).unwrap(), (2, -32768));
 
         let mut data = vec![0; 8];
         assert_eq!(VarUInt(0).serialize(0, &mut data, 0).unwrap(), 0);
@@ -607,19 +612,19 @@ mod test {
 
         let mut data = vec![0; 8];
         assert_eq!(VarUInt(2).serialize(0xbeef, &mut data, 0).unwrap(), 2);
-        assert_eq!(data, [ 0xbe, 0xef, 0, 0, 0, 0, 0, 0 ]);
+        assert_eq!(data, [0xbe, 0xef, 0, 0, 0, 0, 0, 0]);
 
         let mut data = vec![0; 8];
         assert_eq!(VarInt(2).serialize(0x7fff, &mut data, 0).unwrap(), 2);
-        assert_eq!(data, [ 0x7f, 0xff, 0, 0, 0, 0, 0, 0 ]);
+        assert_eq!(data, [0x7f, 0xff, 0, 0, 0, 0, 0, 0]);
 
         let mut data = vec![0; 8];
         assert_eq!(VarInt(2).serialize(-1, &mut data, 0).unwrap(), 2);
-        assert_eq!(data, [ 0xff, 0xff, 0, 0, 0, 0, 0, 0 ]);
+        assert_eq!(data, [0xff, 0xff, 0, 0, 0, 0, 0, 0]);
 
         let mut data = vec![0; 8];
         assert_eq!(VarInt(0).serialize(0, &mut data, 0).unwrap(), 0);
-        assert_eq!(data, [ 0, 0, 0, 0, 0, 0, 0, 0 ]);
+        assert_eq!(data, [0, 0, 0, 0, 0, 0, 0, 0]);
 
         let mut data = vec![0; 8];
         assert!(VarUInt(1).serialize(256, &mut data, 0).is_err());

@@ -4,8 +4,10 @@
 use vstd::prelude::*;
 
 use verdict_polyfill::strs_to_strings;
-#[cfg(feature = "trace")] use verdict_rspec::rspec_trace as rspec;
-#[cfg(not(feature = "trace"))] use verdict_rspec::rspec;
+#[cfg(not(feature = "trace"))]
+use verdict_rspec::rspec;
+#[cfg(feature = "trace")]
+use verdict_rspec::rspec_trace as rspec;
 use verdict_rspec_lib::*;
 
 use super::common::*;

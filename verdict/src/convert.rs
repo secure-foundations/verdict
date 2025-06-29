@@ -1,15 +1,14 @@
 /// Conversion from the more concrete CertificateValue to policy::Certificate
-
 use vstd::prelude::*;
 
 use chrono::NaiveDate;
 
+use verdict_parser::{asn1::*, x509::*, *};
 use verdict_polyfill::*;
-use verdict_parser::{*, asn1::*, x509::*};
 
-use crate::policy;
-use crate::hash;
 use crate::error::*;
+use crate::hash;
+use crate::policy;
 
 verus! {
 

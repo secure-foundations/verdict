@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
-mod common;
 pub mod asn1;
+mod common;
 pub mod x509;
 
 pub use common::*;

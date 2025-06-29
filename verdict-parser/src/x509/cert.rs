@@ -1,5 +1,5 @@
-use vstd::prelude::*;
 use super::*;
+use vstd::prelude::*;
 
 verus! {
 
@@ -55,13 +55,14 @@ mod test {
         }
     }
 
-    fn parse_cert(src: &str) -> Result<(), String>
-    {
+    fn parse_cert(src: &str) -> Result<(), String> {
         let cert_base64 = src.split_whitespace().collect::<String>();
-        let cert_bytes = base64::prelude::BASE64_STANDARD.decode(cert_base64)
+        let cert_bytes = base64::prelude::BASE64_STANDARD
+            .decode(cert_base64)
             .map_err(|e| format!("Failed to decode Base64: {}", e))?;
 
-        let (n, cert) = Certificate.parse(&cert_bytes)
+        let (n, cert) = Certificate
+            .parse(&cert_bytes)
             .map_err(|e| format!("Failed to parse certificate"))?;
 
         // Check that the caching is correct
@@ -79,14 +80,16 @@ mod test {
         const SUFFIX: &'static str = "-----END CERTIFICATE-----";
 
         // Parse all certificates provided
-        roots.split(PREFIX).skip(1).enumerate().for_each(|(i, cert_enc)| {
-            match cert_enc.split(SUFFIX).next() {
+        roots
+            .split(PREFIX)
+            .skip(1)
+            .enumerate()
+            .for_each(|(i, cert_enc)| match cert_enc.split(SUFFIX).next() {
                 Some(cert_enc) => {
                     eprintln!("Parsing certificate {}", i);
                     assert!(parse_cert(cert_enc).is_ok());
                 }
                 None => {}
-            }
-        });
+            });
     }
 }

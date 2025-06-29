@@ -4,11 +4,11 @@
 
 use std::fmt::Debug;
 use std::fmt::Display;
+use std::fmt::Write;
 use std::num::TryFromIntError;
 use std::rc::Rc;
-use std::sync::Arc;
 use std::str::from_utf8;
-use std::fmt::Write;
+use std::sync::Arc;
 
 use vstd::prelude::*;
 

@@ -1,6 +1,6 @@
+use super::*;
 use std::fmt::{self, Debug, Formatter};
 use vstd::prelude::*;
-use super::*;
 
 verus! {
 
@@ -213,7 +213,11 @@ impl Combinator for BitString {
 
 impl<'a> Debug for BitStringValue<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "BitStringValue([{}] ", (self.0.len() - 1) * 8 - self.0[0] as usize)?;
+        write!(
+            f,
+            "BitStringValue([{}] ",
+            (self.0.len() - 1) * 8 - self.0[0] as usize
+        )?;
 
         // Print the hex values
         for i in 1..self.0.len() {
@@ -242,7 +246,10 @@ mod test {
         // The first byte of raw should denote the number of trailing zeros
         let diff = |raw: &[u8]| {
             let res1 = serialize_bit_string(BitStringValue::new_raw(raw).unwrap()).map_err(|_| ());
-            let res2 = der::asn1::BitString::new(raw[0], &raw[1..]).unwrap().to_der().map_err(|_| ());
+            let res2 = der::asn1::BitString::new(raw[0], &raw[1..])
+                .unwrap()
+                .to_der()
+                .map_err(|_| ());
             assert_eq!(res1, res2);
         };
 
@@ -253,7 +260,7 @@ mod test {
 
     #[test]
     fn has_bit() {
-        let (_, s) = BitString.parse(&[ 0x02, 0x01, 0x86 ]).unwrap();
+        let (_, s) = BitString.parse(&[0x02, 0x01, 0x86]).unwrap();
         assert_eq!(s.has_bit(0), true);
         assert_eq!(s.has_bit(1), false);
         assert_eq!(s.has_bit(2), false);

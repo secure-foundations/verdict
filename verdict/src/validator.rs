@@ -3,14 +3,14 @@
 use vstd::prelude::*;
 
 #[allow(unused_imports)]
-use verdict_parser::{*, x509::*, asn1::BitStringValue};
+use verdict_parser::{asn1::BitStringValue, x509::*, *};
 #[allow(unused_imports)]
 use verdict_polyfill::*;
 
-use crate::policy::{self,Policy, Task, ExecTask};
-use crate::signature::*;
-use crate::issue::*;
 use crate::error::*;
+use crate::issue::*;
+use crate::policy::{self, ExecTask, Policy, Task};
+use crate::signature::*;
 
 verus! {
 
@@ -854,16 +854,28 @@ impl RootStore {
 
 impl<'a, P: Policy> Validator<'a, P> {
     /// Debug utility to print some information about the chain being validated
-    pub fn print_debug_info(&self, chain_base64: &Vec<Vec<u8>>, task: &ExecTask)
-        -> Result<(), ValidationError> {
+    pub fn print_debug_info(
+        &self,
+        chain_base64: &Vec<Vec<u8>>,
+        task: &ExecTask,
+    ) -> Result<(), ValidationError> {
         eprintln!("=================== task info ===================");
         // Print some general information about the certs
         eprintln!("{} root certificate(s)", self.roots.len());
         eprintln!("{} chain certificate(s)", chain_base64.len());
 
-        let chain_der = chain_base64.iter().map(|base64| decode_base64(base64)).collect::<Result<Vec<_>, _>>()?;
-        let chain = chain_der.iter().map(|der| parse_x509_der(der)).collect::<Result<Vec<_>, _>>()?;
-        let chain_abs = chain.iter().map(|cert| policy::Certificate::from(cert)).collect::<Result<Vec<_>, _>>()?;
+        let chain_der = chain_base64
+            .iter()
+            .map(|base64| decode_base64(base64))
+            .collect::<Result<Vec<_>, _>>()?;
+        let chain = chain_der
+            .iter()
+            .map(|der| parse_x509_der(der))
+            .collect::<Result<Vec<_>, _>>()?;
+        let chain_abs = chain
+            .iter()
+            .map(|cert| policy::Certificate::from(cert))
+            .collect::<Result<Vec<_>, _>>()?;
 
         // Check that for each i, cert[i + 1] issued cert[i]
         for i in 0..chain.len() {
@@ -959,11 +971,36 @@ mod tests {
     }
 
     const TESTS: &[(&str, &str, u64, bool)] = &[
-        (include_str!("../tests/chains/github.pem"), "github.com", 1725029869, true),
-        (include_str!("../tests/chains/google.pem"), "google.com", 1725029869, true),
-        (include_str!("../tests/chains/outlook.pem"), "outlook.com", 1725029869, true),
-        (include_str!("../tests/chains/slack.pem"), "slack.com", 1725029869, true),
-        (include_str!("../tests/chains/verus.pem"), "verus.rs", 1725029869, true),
+        (
+            include_str!("../tests/chains/github.pem"),
+            "github.com",
+            1725029869,
+            true,
+        ),
+        (
+            include_str!("../tests/chains/google.pem"),
+            "google.com",
+            1725029869,
+            true,
+        ),
+        (
+            include_str!("../tests/chains/outlook.pem"),
+            "outlook.com",
+            1725029869,
+            true,
+        ),
+        (
+            include_str!("../tests/chains/slack.pem"),
+            "slack.com",
+            1725029869,
+            true,
+        ),
+        (
+            include_str!("../tests/chains/verus.pem"),
+            "verus.rs",
+            1725029869,
+            true,
+        ),
     ];
 
     macro_rules! test_policy {
@@ -981,13 +1018,13 @@ mod tests {
                         hostname: Some(hostname.to_string()),
                         purpose: ExecPurpose::ServerAuth,
                         now: *now,
-                    }
+                    },
                 );
 
                 assert!(res.is_ok());
                 assert_eq!(res.unwrap(), *expected);
             }
-        }
+        };
     }
 
     #[test]

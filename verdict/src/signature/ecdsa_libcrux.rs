@@ -1,13 +1,13 @@
 use vstd::prelude::*;
 
-use verdict_polyfill::slice_drop_first;
-use libcrux::signature::{Signature, EcDsaP256Signature, Algorithm, DigestAlgorithm, verify};
 use aws_lc_rs::signature::VerificationAlgorithm;
+use libcrux::signature::{verify, Algorithm, DigestAlgorithm, EcDsaP256Signature, Signature};
+use verdict_polyfill::slice_drop_first;
 
-use verdict_parser::PolyfillEq;
-use verdict_parser::Combinator;
 use verdict_parser::asn1::ASN1;
 use verdict_parser::x509::*;
+use verdict_parser::Combinator;
+use verdict_parser::PolyfillEq;
 
 verus! {
 

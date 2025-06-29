@@ -1,5 +1,5 @@
-use std::io;
 use std::fs::File;
+use std::io;
 use std::net::IpAddr;
 use std::path::Path;
 use std::sync::Arc;
@@ -14,13 +14,13 @@ use crossbeam::channel::Sender;
 use csv::{ReaderBuilder, WriterBuilder};
 use verdict::Task;
 
-use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 use crate::ct_logs::*;
 use crate::error::*;
-use crate::utils::*;
 use crate::harness::*;
+use crate::utils::*;
 
 #[derive(Parser, Debug)]
 pub struct Args {
@@ -83,7 +83,13 @@ pub struct Args {
 }
 
 /// Each worker thread waits for CTLogEntry's, does the validation, and then sends back CTLogResult's
-fn worker(args: &Args, timestamp: u64, mut instance: Box<dyn Instance>, rx_job: Receiver<CTLogEntry>, tx_res: Sender<CTLogResult>) -> Result<(), Error> {
+fn worker(
+    args: &Args,
+    timestamp: u64,
+    mut instance: Box<dyn Instance>,
+    rx_job: Receiver<CTLogEntry>,
+    tx_res: Sender<CTLogResult>,
+) -> Result<(), Error> {
     // Recv a CTLogEntry
     while let Ok(entry) = rx_job.recv() {
         let mut bundle = vec![entry.cert_base64.to_string()];
@@ -91,13 +97,24 @@ fn worker(args: &Args, timestamp: u64, mut instance: Box<dyn Instance>, rx_job: 
         // Look up all intermediate certificates <args.interm_dir>/<entry.interm_certs>.pem
         // `entry.interm_certs` is a comma-separated list
         for interm_cert in entry.interm_certs.split(",") {
-            bundle.extend(read_pem_file_as_base64(&format!("{}/{}.pem", &args.interm_dir, interm_cert))?);
+            bundle.extend(read_pem_file_as_base64(&format!(
+                "{}/{}.pem",
+                &args.interm_dir, interm_cert
+            ))?);
         }
 
         let res = if args.no_domain {
-            instance.validate(&bundle, &Task::new_server_auth(None, timestamp), args.repeat)?
+            instance.validate(
+                &bundle,
+                &Task::new_server_auth(None, timestamp),
+                args.repeat,
+            )?
         } else {
-            instance.validate(&bundle, &Task::new_server_auth(Some(&entry.domain), timestamp), args.repeat)?
+            instance.validate(
+                &bundle,
+                &Task::new_server_auth(Some(&entry.domain), timestamp),
+                args.repeat,
+            )?
         };
 
         // Send back a CTLogResult
@@ -114,7 +131,10 @@ fn worker(args: &Args, timestamp: u64, mut instance: Box<dyn Instance>, rx_job: 
 }
 
 /// Collect validation results from `rx_res` and write them to a CSV file (or stdout if not specified)
-fn reducer(mut output_writer: csv::Writer<Box<dyn io::Write + Sync + Send>>, rx_res: Receiver<CTLogResult>) -> Result<(), Error> {
+fn reducer(
+    mut output_writer: csv::Writer<Box<dyn io::Write + Sync + Send>>,
+    rx_res: Receiver<CTLogResult>,
+) -> Result<(), Error> {
     // Open the output file if it exists, otherwise use stdout
     // let handle: Box<dyn io::Write> = if let Some(out_path) = out_csv {
     //     Box::new(File::create(out_path)?)
@@ -131,7 +151,10 @@ fn reducer(mut output_writer: csv::Writer<Box<dyn io::Write + Sync + Send>>, rx_
         output_writer.flush()?;
     }
 
-    eprintln!("total validation time: {:.3}s", start.elapsed().as_secs_f64());
+    eprintln!(
+        "total validation time: {:.3}s",
+        start.elapsed().as_secs_f64()
+    );
 
     Ok(())
 }
@@ -167,8 +190,7 @@ pub fn main(args: Args) -> Result<(), Error> {
         } else {
             Box::new(std::io::stdout())
         };
-        let output_writer =
-            WriterBuilder::new().has_headers(false).from_writer(handle);
+        let output_writer = WriterBuilder::new().has_headers(false).from_writer(handle);
 
         for _ in 0..args.num_jobs {
             let args = args.clone();
@@ -176,7 +198,9 @@ pub fn main(args: Args) -> Result<(), Error> {
             let rx_job = rx_job.clone();
             let tx_res = tx_res.clone();
 
-            workers.push(thread::spawn(move || worker(&args, timestamp, instance, rx_job, tx_res)));
+            workers.push(thread::spawn(move || {
+                worker(&args, timestamp, instance, rx_job, tx_res)
+            }));
         }
 
         workers.push(thread::spawn(move || reducer(output_writer, rx_res)));
@@ -188,9 +212,7 @@ pub fn main(args: Args) -> Result<(), Error> {
 
         'outer: for path in &args.csv_files {
             let file = File::open(path)?;
-            let mut reader = ReaderBuilder::new()
-                .has_headers(false)
-                .from_reader(file);
+            let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
 
             for entry in reader.deserialize() {
                 let entry: CTLogEntry = entry?;
@@ -209,7 +231,10 @@ pub fn main(args: Args) -> Result<(), Error> {
                 }
 
                 // Filter out tasks with empty domain name, IP address, or unicode character that failed to parse
-                if entry.domain.is_empty() || entry.domain.parse::<IpAddr>().is_ok() || entry.domain.contains('\u{FFFD}') {
+                if entry.domain.is_empty()
+                    || entry.domain.parse::<IpAddr>().is_ok()
+                    || entry.domain.contains('\u{FFFD}')
+                {
                     // eprintln!("Skipping {} due to unsupported domain name \"{}\"", &entry.hash, &entry.domain);
                     continue;
                 }

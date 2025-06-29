@@ -33,15 +33,15 @@
 #![deny(unsafe_code)]
 #![warn(rust_2018_idioms)]
 
-mod issue;
-mod hash;
-mod signature;
 mod convert;
+mod hash;
+mod issue;
+mod signature;
 
+mod api;
 mod error;
 mod policy;
-mod validator;
 mod utils;
-mod api;
+mod validator;
 
 pub use api::*;

@@ -20,7 +20,7 @@ pub struct HammurabiHarness {
 impl Harness for HammurabiHarness {
     fn spawn(&self, roots_path: &str, timestamp: u64) -> Result<Box<dyn Instance>, Error> {
         let mut bin_path = PathBuf::from(&self.repo);
-        bin_path.extend([ "target", "release", "bench" ]);
+        bin_path.extend(["target", "release", "bench"]);
 
         if !bin_path.exists() {
             return Err(Error::HammurabiRepoNotFound(bin_path.display().to_string()));

@@ -1,6 +1,6 @@
+use super::*;
 use std::fmt::{self, Debug, Formatter};
 use vstd::prelude::*;
-use super::*;
 
 verus! {
 

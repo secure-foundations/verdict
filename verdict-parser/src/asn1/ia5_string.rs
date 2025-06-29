@@ -1,8 +1,7 @@
+use super::*;
 /// TODO: maybe refactor this using Refined
-
 use std::fmt::{self, Debug, Formatter};
 use vstd::prelude::*;
-use super::*;
 
 verus! {
 
@@ -163,7 +162,10 @@ mod tests {
     fn diff_with_der() {
         let diff = |s: &str| {
             let res1 = serialize_ia5_string(s).map_err(|_| ());
-            let res2 = der::asn1::Ia5StringRef::new(s).unwrap().to_der().map_err(|_| ());
+            let res2 = der::asn1::Ia5StringRef::new(s)
+                .unwrap()
+                .to_der()
+                .map_err(|_| ());
             assert_eq!(res1, res2);
         };
 

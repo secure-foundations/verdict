@@ -2,8 +2,8 @@
 
 #![allow(unused)]
 
-use vstd::prelude::*;
 use super::common::*;
+use vstd::prelude::*;
 
 verus! {
 

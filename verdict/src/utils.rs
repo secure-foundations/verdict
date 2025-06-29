@@ -16,7 +16,9 @@ pub enum PEMParseError {
 }
 
 /// Decodes PEM format and returns an iterator over Base64-encoded strings
-pub fn read_pem_as_base64<B: BufRead>(reader: B) -> impl Iterator<Item = Result<String, PEMParseError>> {
+pub fn read_pem_as_base64<B: BufRead>(
+    reader: B,
+) -> impl Iterator<Item = Result<String, PEMParseError>> {
     const PREFIX: &'static str = "-----BEGIN CERTIFICATE-----";
     const SUFFIX: &'static str = "-----END CERTIFICATE-----";
 

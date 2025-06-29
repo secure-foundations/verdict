@@ -2,8 +2,8 @@
 
 use vstd::prelude::*;
 
-use verdict_polyfill::*;
 use libcrux::digest;
+use verdict_polyfill::*;
 
 verus! {
 

@@ -1,10 +1,10 @@
-use std::io::{self, BufReader};
-use std::fs::File;
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::{self, BufReader};
 
 use clap::Parser;
-use regex::Regex;
 use csv::ReaderBuilder;
+use regex::Regex;
 
 use crate::error::*;
 
@@ -56,28 +56,26 @@ impl DiffClass {
     }
 }
 
-pub fn main(args: Args) -> Result<(), Error>
-{
-    let classes = args.classes.iter()
-        .map(|pat| Regex::new(pat)).collect::<Result<Vec<_>, _>>()?;
+pub fn main(args: Args) -> Result<(), Error> {
+    let classes = args
+        .classes
+        .iter()
+        .map(|pat| Regex::new(pat))
+        .collect::<Result<Vec<_>, _>>()?;
 
     // Read CSV file1 into a HashMap
     let file1 = BufReader::new(File::open(&args.file1)?);
-    let file1_results: HashMap<String, (String, DiffClass)> =
-        ReaderBuilder::new()
-            .has_headers(false)
-            .from_reader(file1)
-            .records()
-            .map(|res| {
-                let res = res?;
-                let value = &res[args.value_column];
-                let class = DiffClass::get(&classes, value);
-                Ok::<_, csv::Error>((
-                    res[args.key_column].to_string(),
-                    (value.to_string(), class),
-                ))
-            })
-            .collect::<Result<_, _>>()?;
+    let file1_results: HashMap<String, (String, DiffClass)> = ReaderBuilder::new()
+        .has_headers(false)
+        .from_reader(file1)
+        .records()
+        .map(|res| {
+            let res = res?;
+            let value = &res[args.value_column];
+            let class = DiffClass::get(&classes, value);
+            Ok::<_, csv::Error>((res[args.key_column].to_string(), (value.to_string(), class)))
+        })
+        .collect::<Result<_, _>>()?;
 
     // Create a reader on file2 or stdin
     let file2: Box<dyn io::Read> = if let Some(file2) = args.file2 {
@@ -86,9 +84,7 @@ pub fn main(args: Args) -> Result<(), Error>
         Box::new(std::io::stdin())
     };
 
-    let mut file2_reader = ReaderBuilder::new()
-        .has_headers(false)
-        .from_reader(file2);
+    let mut file2_reader = ReaderBuilder::new().has_headers(false).from_reader(file2);
 
     let mut class_count = HashMap::new();
 

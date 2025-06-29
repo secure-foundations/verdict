@@ -1,15 +1,15 @@
 #![forbid(unsafe_code)]
 
-mod error;
-mod utils;
-mod ct_logs;
-mod harness;
 mod cmd;
+mod ct_logs;
+mod error;
+mod harness;
+mod utils;
 
-use std::process::ExitCode;
 use clap::{command, Parser, Subcommand};
-use error::*;
 use cmd::*;
+use error::*;
+use std::process::ExitCode;
 
 #[derive(Parser, Debug)]
 #[command(long_about = None)]

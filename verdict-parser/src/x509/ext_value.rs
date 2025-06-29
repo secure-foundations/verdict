@@ -1,7 +1,7 @@
-use vstd::prelude::*;
+use super::*;
 use crate::asn1::Boolean;
 use crate::asn1::Integer;
-use super::*;
+use vstd::prelude::*;
 
 verus! {
 

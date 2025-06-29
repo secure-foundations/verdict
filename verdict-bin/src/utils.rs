@@ -12,12 +12,10 @@ pub fn read_pem_file_as_base64(path: &str) -> Result<Vec<String>, Error> {
 
 /// Read a PEM file (given as a BufRead) and return an iterator over the decoded certificates
 pub fn read_pem_as_bytes<B: BufRead>(reader: B) -> impl Iterator<Item = Result<Vec<u8>, Error>> {
-    read_pem_as_base64(reader).map(|res|
-        match res {
-            Ok(cert_base64) => Ok(decode_base64(cert_base64.as_bytes())?),
-            Err(err) => Err(err),
-        }
-    )
+    read_pem_as_base64(reader).map(|res| match res {
+        Ok(cert_base64) => Ok(decode_base64(cert_base64.as_bytes())?),
+        Err(err) => Err(err),
+    })
 }
 
 /// Read a PEM file and return an iterator over base64 encoded strings

@@ -1,8 +1,8 @@
-use vstd::prelude::*;
 use aws_lc_rs::signature::VerificationAlgorithm;
+use vstd::prelude::*;
 
-use verdict_parser::PolyfillEq;
 use verdict_parser::x509::*;
+use verdict_parser::PolyfillEq;
 
 verus! {
 

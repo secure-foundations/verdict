@@ -267,7 +267,7 @@ macro_rules! declare_identity_view_reflex {
                 proof fn reflex(&self) {}
             }
         }
-};
+    };
 }
 
 declare_identity_view_reflex!(());

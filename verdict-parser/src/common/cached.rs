@@ -1,6 +1,6 @@
+use super::*;
 use std::ops::Deref;
 use vstd::prelude::*;
-use super::*;
 
 verus! {
 
@@ -159,7 +159,8 @@ impl<T: Combinator> Combinator for Cached<T> where
 
 }
 
-impl<'a, C: Combinator> std::fmt::Debug for CachedValue<'a, C> where
+impl<'a, C: Combinator> std::fmt::Debug for CachedValue<'a, C>
+where
     C::V: SecureSpecCombinator<SpecResult = <C::Owned as View>::V>,
     C::Result<'a>: std::fmt::Debug,
 {

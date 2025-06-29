@@ -1,6 +1,6 @@
+use super::*;
 use std::marker::PhantomData;
 use vstd::prelude::*;
-use super::*;
 
 verus! {
 

@@ -1,6 +1,6 @@
+use super::*;
 use std::fmt::{self, Debug, Formatter};
 use vstd::prelude::*;
-use super::*;
 
 verus! {
 
@@ -279,7 +279,7 @@ impl Debug for ObjectIdentifierValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "OID(")?;
 
-        for (i, arc) in self.0.0.iter().enumerate() {
+        for (i, arc) in self.0 .0.iter().enumerate() {
             if i != 0 {
                 write!(f, ".")?;
             }
@@ -299,7 +299,11 @@ mod tests {
     fn serialize_oid(v: Vec<UInt>) -> Result<Vec<u8>, SerializeError> {
         let mut data = vec![0; 1 + 4 + v.len() * 8];
         data[0] = 0x06;
-        let len = ObjectIdentifier.serialize(ObjectIdentifierValue(VecDeep::from_vec(v)), &mut data, 1)?;
+        let len = ObjectIdentifier.serialize(
+            ObjectIdentifierValue(VecDeep::from_vec(v)),
+            &mut data,
+            1,
+        )?;
         data.truncate(len + 1);
         Ok(data)
     }
@@ -309,8 +313,14 @@ mod tests {
         let diff = |v: Vec<UInt>| {
             let res1 = serialize_oid(PolyfillClone::clone(&v)).map_err(|_| ());
             let res2 = der::asn1::ObjectIdentifier::new_unwrap(
-                v.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(".").as_str()
-            ).to_der().map_err(|_| ());
+                v.iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(".")
+                    .as_str(),
+            )
+            .to_der()
+            .map_err(|_| ());
 
             assert_eq!(res1, res2);
         };

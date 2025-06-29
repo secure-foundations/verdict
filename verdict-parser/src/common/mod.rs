@@ -1,41 +1,40 @@
 #![allow(unused_imports)]
 
-/// Common operators, some from Vest
-
-pub(crate) use verdict_polyfill::*;
-pub(crate) use verdict_macros::View;
 pub(crate) use verdict_macros::PolyfillClone;
+pub(crate) use verdict_macros::View;
+/// Common operators, some from Vest
+pub(crate) use verdict_polyfill::*;
 
-mod depend;
-mod repeat;
-mod end;
-mod vest;
-mod clone;
-mod optional;
-mod vec_deep;
-mod option_deep;
-mod pair;
-mod wrapped;
-mod mapper;
-mod default;
-mod eq;
-mod unreachable;
-mod cached;
 mod base64;
+mod cached;
+mod clone;
+mod default;
+mod depend;
+mod end;
+mod eq;
+mod mapper;
+mod option_deep;
+mod optional;
+mod pair;
+mod repeat;
+mod unreachable;
+mod vec_deep;
+mod vest;
+mod wrapped;
 
-pub use depend::*;
-pub use repeat::*;
-pub use end::*;
-pub use vest::*;
-pub use clone::*;
-pub use optional::*;
-pub use vec_deep::*;
-pub use option_deep::*;
-pub use pair::*;
-pub use wrapped::*;
-pub use mapper::*;
-pub use default::*;
-pub use eq::*;
-pub use unreachable::*;
-pub use cached::*;
 pub use base64::*;
+pub use cached::*;
+pub use clone::*;
+pub use default::*;
+pub use depend::*;
+pub use end::*;
+pub use eq::*;
+pub use mapper::*;
+pub use option_deep::*;
+pub use optional::*;
+pub use pair::*;
+pub use repeat::*;
+pub use unreachable::*;
+pub use vec_deep::*;
+pub use vest::*;
+pub use wrapped::*;

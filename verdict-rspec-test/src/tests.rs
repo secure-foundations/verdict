@@ -1,30 +1,34 @@
 #![allow(unused)]
 
-use vstd::prelude::*;
 use verdict_rspec::test_rspec;
 #[allow(unused_imports)]
 use verdict_rspec_lib::*;
+use vstd::prelude::*;
 
-test_rspec!(mod simple_struct1 {
-    pub struct Test {
-        pub a: SpecString,
-        pub b: u32,
+test_rspec!(
+    mod simple_struct1 {
+        pub struct Test {
+            pub a: SpecString,
+            pub b: u32,
+        }
     }
-});
+);
 
-test_rspec!(mod simple_struct2 {
-    pub struct Test1 {
-        pub a: SpecString,
-        pub b: u32,
-        pub c: Seq<u32>,
-        pub d: Seq<Seq<u32>>,
-    }
+test_rspec!(
+    mod simple_struct2 {
+        pub struct Test1 {
+            pub a: SpecString,
+            pub b: u32,
+            pub c: Seq<u32>,
+            pub d: Seq<Seq<u32>>,
+        }
 
-    pub struct Test2 {
-        a: Option<Test1>,
-        b: Seq<Test1>,
+        pub struct Test2 {
+            a: Option<Test1>,
+            b: Seq<Test1>,
+        }
     }
-});
+);
 
 test_rspec!(mod simple_function1 {
     pub closed spec fn test1(i: u32) -> bool {
@@ -214,19 +218,23 @@ test_rspec!(mod test_match {
     }
 });
 
-test_rspec!(mod test_enum {
-    enum A {
-        B(u32),
-        C,
-        D { a: Seq<u32>, b: Option<SpecString> },
+test_rspec!(
+    mod test_enum {
+        enum A {
+            B(u32),
+            C,
+            D { a: Seq<u32>, b: Option<SpecString> },
+        }
     }
-});
+);
 
-test_rspec!(mod test_struct_unnamed {
-    struct Test(u32, SpecString);
-    struct UnitStruct;
-    struct UnitStruct2();
-});
+test_rspec!(
+    mod test_struct_unnamed {
+        struct Test(u32, SpecString);
+        struct UnitStruct;
+        struct UnitStruct2();
+    }
+);
 
 mod extern_functions {
     use super::*;
