@@ -31,7 +31,7 @@ pub struct Args {
     #[clap(short = 't', long = "test")]
     test_id: Option<String>,
 
-    /// Only validate the first <limit> certificates, if specified
+    /// Only validate the first LIMIT certificates, if specified
     #[clap(short = 'l', long)]
     limit: Option<usize>,
 

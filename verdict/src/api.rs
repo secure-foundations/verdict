@@ -19,6 +19,13 @@ use verdict_parser::VecDeep;
 
 pub use verdict_parser::{decode_base64, parse_x509_der, ParseError};
 
+pub use crate::policy::{
+    ExecAttribute, ExecAuthorityInfoAccess, ExecAuthorityKeyIdentifier, ExecBasicConstraints,
+    ExecCertificatePolicies, ExecDistinguishedName, ExecExtendedKeyUsage, ExecExtendedKeyUsageType,
+    ExecExtension, ExecGeneralName, ExecKeyUsage, ExecNameConstraints, ExecSignatureAlgorithm,
+    ExecSubjectAltName, ExecSubjectKey, ExecSubjectKeyIdentifier,
+};
+
 /// Errors in validation, parsing, and policy execution.
 #[derive(Debug, Error)]
 pub enum ValidationError {

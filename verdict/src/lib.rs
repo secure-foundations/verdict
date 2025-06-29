@@ -1,5 +1,5 @@
 //! Welcome to the documentation for `verdict`, a formally verified
-//! X.509 certificate validation library (developed using [Verus](https://verus.rs)).
+//! X.509 certificate validation library (developed using [Verus](https://github.com/verus-lang/verus)).
 //! You can also find a CLI tool and more details about Verdict at [our GitHub repo](https://github.com/secure-foundations/verdict).
 //!
 //! This is still a very experimental tool, so the API here is likely rough around

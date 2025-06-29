@@ -19,7 +19,7 @@ jobs:
       with:
         submodules: true
     - name: Format
-      run: cargo fmt --check
+      run: rustup component add rustfmt && cargo fmt --check
 
   verified-build:
     runs-on: ubuntu-latest
@@ -35,8 +35,8 @@ jobs:
       run: source tools/activate.sh && cargo verus build --features trace
     - name: Build release
       run: source tools/activate.sh && cargo verus build --release
-    - name: Build release with aws-lc feature
-      run: source tools/activate.sh && cargo verus build --release --features aws-lc
+    - name: Build release with verified-crypto feature
+      run: source tools/activate.sh && cargo verus build --release --features verified-crypto
     - name: Test
       run: source tools/activate.sh && cargo test --workspace
 
@@ -52,5 +52,5 @@ jobs:
       run: cargo build
     - name: Build release
       run: cargo build --release
-    - name: Build release with aws-lc feature
-      run: cargo build --release --features aws-lc
+    - name: Build release with verified-crypto feature
+      run: cargo build --release --features verified-crypto

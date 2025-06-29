@@ -2,46 +2,21 @@
 
 use vstd::prelude::*;
 
-use libcrux::digest;
 use verdict_polyfill::*;
 
 verus! {
 
-pub uninterp spec fn spec_sha224_digest(data: Seq<u8>) -> Seq<u8>;
+/// NOTE: we trust the correctness of SHA256 implementation in AWS-LC
 pub uninterp spec fn spec_sha256_digest(data: Seq<u8>) -> Seq<u8>;
-pub uninterp spec fn spec_sha384_digest(data: Seq<u8>) -> Seq<u8>;
-pub uninterp spec fn spec_sha512_digest(data: Seq<u8>) -> Seq<u8>;
 
 #[verifier::external_body]
-#[inline(always)]
-pub fn sha224_digest(data: &[u8]) -> (res: [u8; 28])
-    ensures res@ == spec_sha224_digest(data@)
-{
-    digest::sha2_224(data)
-}
-
-#[verifier::external_body]
-#[inline(always)]
-pub fn sha256_digest(data: &[u8]) -> (res: [u8; 32])
+pub fn sha256_digest(data: &[u8]) -> (res: Vec<u8>)
     ensures res@ == spec_sha256_digest(data@)
 {
-    digest::sha2_256(data)
-}
-
-#[verifier::external_body]
-#[inline(always)]
-pub fn sha384_digest(data: &[u8]) -> (res: [u8; 48])
-    ensures res@ == spec_sha384_digest(data@)
-{
-    digest::sha2_384(data)
-}
-
-#[verifier::external_body]
-#[inline(always)]
-pub fn sha512_digest(data: &[u8]) -> (res: [u8; 64])
-    ensures res@ == spec_sha512_digest(data@)
-{
-    digest::sha2_512(data)
+    aws_lc_rs::digest::digest(
+        &aws_lc_rs::digest::SHA256,
+        data,
+    ).as_ref().to_vec()
 }
 
 const HEX_UPPER: [char; 16] = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' ];

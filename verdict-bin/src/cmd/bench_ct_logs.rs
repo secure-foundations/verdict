@@ -49,11 +49,11 @@ pub struct Args {
     #[clap(short = 'j', long = "jobs", default_value = "1")]
     num_jobs: usize,
 
-    /// Only validate the first <limit> certificates, if specified
+    /// Only validate the first LIMIT certificates, if specified
     #[clap(long)]
     limit: Option<usize>,
 
-    /// Skip the first <skip> certificates
+    /// Skip the first SKIP certificates
     #[clap(long)]
     skip: Option<usize>,
 

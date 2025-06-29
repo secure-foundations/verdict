@@ -13,8 +13,8 @@ builtin_macros = { path = "../deps/verus/source/builtin_macros" }
 builtin = { path = "../deps/verus/source/builtin" }
 vstd = { path = "../deps/verus/source/vstd" }
 vest = { path = "../deps/vest" }
-libcrux = { path = "../deps/libcrux" }
-libcrux-hacl = { path = "../deps/libcrux/sys/hacl" }
+libcrux = { path = "../deps/libcrux", optional = true }
+libcrux-hacl = { path = "../deps/libcrux/sys/hacl", optional = true }
 chrono = "0.4.38"
 aws-lc-rs = "1.10.0"
 verdict-polyfill = { path = "../verdict-polyfill" }
@@ -27,7 +27,7 @@ ref-cast = "1.0.24"
 
 [features]
 default = []
-aws-lc = []
+verified-crypto = ["dep:libcrux", "dep:libcrux-hacl"]
 trace = ["verdict-parser/trace"]
 
 [package.metadata.verus]

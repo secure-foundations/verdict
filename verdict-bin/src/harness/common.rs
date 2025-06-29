@@ -178,9 +178,9 @@ pub struct HarnessArgs {
     /// X509 validator used for benchmarking
     name: HarnessName,
 
-    /// For any harness, if the specific <harness>_repo
+    /// For any harness, if the specific `<harness>_repo`
     /// flag is not given, and --bench-repo is specified,
-    /// then we will use the path <bench_repo>/<harness>
+    /// then we will use the path `<bench_repo>/<harness>`
     /// as the harness repo
     #[clap(long)]
     bench_repo: Option<String>,

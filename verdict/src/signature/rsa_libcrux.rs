@@ -9,8 +9,6 @@ use verdict_parser::x509::*;
 use verdict_parser::Combinator;
 use verdict_parser::PolyfillEq;
 
-use crate::hash;
-
 verus! {
 
 #[derive(Debug)]
@@ -200,13 +198,13 @@ pub fn pkcs1_v1_5_verify(
 
     // TODO: more digest algorithms
     let res = if alg.id.polyfill_eq(&oid!(RSA_SIGNATURE_SHA224)) {
-        slice_eq(&digest_info_parsed.digest, &hash::sha224_digest(msg))
+        slice_eq(&digest_info_parsed.digest, &libcrux::digest::sha2_224(msg))
     } else if alg.id.polyfill_eq(&oid!(RSA_SIGNATURE_SHA256)) {
-        slice_eq(&digest_info_parsed.digest, &hash::sha256_digest(msg))
+        slice_eq(&digest_info_parsed.digest, &libcrux::digest::sha2_256(msg))
     } else if alg.id.polyfill_eq(&oid!(RSA_SIGNATURE_SHA384)) {
-        slice_eq(&digest_info_parsed.digest, &hash::sha384_digest(msg))
+        slice_eq(&digest_info_parsed.digest, &libcrux::digest::sha2_384(msg))
     } else if alg.id.polyfill_eq(&oid!(RSA_SIGNATURE_SHA512)) {
-        slice_eq(&digest_info_parsed.digest, &hash::sha512_digest(msg))
+        slice_eq(&digest_info_parsed.digest, &libcrux::digest::sha2_512(msg))
     } else {
         return Err(RSAError::UnsupportedAlgorithm);
     };

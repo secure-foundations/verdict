@@ -21,7 +21,6 @@ pub uninterp spec fn spec_p384_verify(
 ) -> bool;
 
 pub enum ECDSAError {
-    InvalidSignature,
     UnsupportedAlgorithm,
     VerificationFailed,
 }

@@ -27,11 +27,13 @@ cargo verus build --release
 Then use `target/release/verdict` to validate certificate chains or run benchmarks.
 See `target/release/verdict --help` for details.
 
-By default, we only use *verified* crypto primitives from [libcrux](https://github.com/cryspen/libcrux) and [aws-lc-rs](https://github.com/aws/aws-lc-rs).
-To use primitives entirely from `aws-lc-rs` which might have better performance but include unverified signature checking for RSA and ECDSA P-256,
-compile with
+By default, we use crypto primitives from [`AWS-LC`](https://github.com/aws/aws-lc).
+However, some of the primitives are not formally verified on certain platforms (see [here](https://github.com/aws/aws-lc#formal-verification) for more details).
+We also have a feature `verified-crypto` that selects only verified primitives
+from [libcrux](https://github.com/cryspen/libcrux) and AWS-LC.
+To use it, compile with
 ```
-cargo verus build --release --features aws-lc
+cargo verus build --release --features verified-crypto
 ```
 
 To run some sanity checks

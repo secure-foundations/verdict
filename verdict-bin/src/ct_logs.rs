@@ -21,7 +21,7 @@ pub struct CTLogResult {
     pub stats: Vec<u64>,
 }
 
-/// Workaround for an issue in rust-csv: https://github.com/BurntSushi/rust-csv/issues/113
+/// Workaround for an [issue](https://github.com/BurntSushi/rust-csv/issues/113) in rust-csv
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CTLogResultLegacy {
     pub hash: String,

@@ -23,5 +23,5 @@ rand = "0.8.5"
 
 [features]
 default = []
-aws-lc = ["verdict/aws-lc"]
+verified-crypto = ["verdict/verified-crypto"]
 trace = ["verdict/trace"]
