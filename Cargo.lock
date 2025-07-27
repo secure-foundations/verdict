@@ -429,6 +429,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "exec-spec"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn_verus",
+]
+
+[[package]]
+name = "exec-spec-lib"
+version = "0.1.0"
+dependencies = [
+ "builtin",
+ "builtin_macros",
+ "vstd",
+]
+
+[[package]]
+name = "exec-spec-test"
+version = "0.1.0"
+dependencies = [
+ "builtin",
+ "builtin_macros",
+ "exec-spec",
+ "exec-spec-lib",
+ "vstd",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

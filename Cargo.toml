@@ -9,6 +9,9 @@ members = [
     "verdict-rspec-lib",
     "verdict-rspec-test",
     "deps/vest",
+    "exec-spec",
+    "exec-spec-lib",
+    "exec-spec-test",
 ]
 
 default-members = [

@@ -1,0 +1,15 @@
+[package]
+name = "exec-spec-lib"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+builtin_macros = { path = "../deps/verus/source/builtin_macros" }
+builtin = { path = "../deps/verus/source/builtin" }
+vstd = { path = "../deps/verus/source/vstd" }
+
+[package.metadata.verus]
+verify = true
+
+[lints]
+workspace = true
