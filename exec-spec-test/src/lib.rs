@@ -1,3 +1,6 @@
+#![allow(unused_parens)]
+#![allow(non_shorthand_field_patterns)]
+
 use vstd::prelude::*;
 use exec_spec::*;
 use exec_spec_lib::*;
@@ -30,6 +33,7 @@ mod test_exec_spec_struct {
     use super::*;
 
     exec_spec! {
+        #[allow(dead_code)]
         enum MyOption {
             Some(u32),
             None,
@@ -37,6 +41,7 @@ mod test_exec_spec_struct {
     }
 
     exec_spec! {
+        #[allow(dead_code)]
         pub struct S {
             a: u32,
             b: MyOption,
@@ -61,6 +66,7 @@ mod test_exec_spec_typing {
             s
         }
 
+        #[allow(dead_code)]
         struct S {
             b: SpecString,
         }
@@ -151,7 +157,7 @@ mod test_exec_spec_index1 {
 
     exec_spec! {
         spec fn test(s: SpecString, i: usize) -> char {
-            if 0 <= i && i < s.len() {
+            if i < s.len() {
                 s[i as int]
             } else {
                 ' '
@@ -221,6 +227,8 @@ mod test_exec_spec_equality {
 
 /// Tests match expressions
 mod test_exec_spec_match {
+    #![allow(dead_code)]
+
     use super::*;
 
     exec_spec! {
@@ -314,6 +322,7 @@ mod test_exec_spec_tuple {
 
 /// Tests struct/enum constructors
 mod test_exec_spec_constructor {
+    #![allow(dead_code)]
     use super::*;
 
     exec_spec! {
@@ -349,6 +358,7 @@ mod test_exec_spec_constructor {
 
 /// Tests `matches`
 mod test_exec_spec_matches {
+    #![allow(dead_code)]
     use super::*;
 
     exec_spec! {
@@ -443,6 +453,8 @@ mod test_exec_spec_interop1 {
         }
     }
 
+    #[allow(dead_code)]
+    #[allow(unused_variables)]
     fn sanity_check() {
         reveal_with_fuel(test_all_positive, 3);
         assert(test_all_positive(seq![1, 2, 3], 0));
@@ -456,6 +468,7 @@ mod test_exec_spec_interop2 {
     use super::*;
 
     exec_spec! {
+        #[allow(dead_code)]
         struct A {
             a: u32,
             b: u32,
@@ -466,6 +479,7 @@ mod test_exec_spec_interop2 {
         }
     }
 
+    #[allow(dead_code)]
     fn sanity_check() {
         let a = ExecA { a: 3, b: 2 };
 
@@ -501,6 +515,7 @@ mod test_exec_spec_interop3 {
         }
     }
 
+    #[allow(dead_code)]
     fn test() {
         let a = ExecMyPair(vec![1, 2, 3], vec![0, 1, 2]);
 
@@ -518,6 +533,8 @@ mod test_exec_spec_interop3 {
 
 /// Test that linear variables are compiled correctly
 mod test_exec_spec_linear {
+    #![allow(dead_code)]
+    #![allow(unused_variables)]
     use super::*;
 
     exec_spec! {
@@ -543,6 +560,161 @@ mod test_exec_spec_linear {
                 d
             };
             e
+        }
+    }
+}
+
+mod test_certificate {
+    use super ::*;
+
+    exec_spec! {
+        pub struct Attribute {
+            pub oid: SpecString,
+            pub value: SpecString,
+        }
+
+        pub struct DistinguishedName(pub Seq<Seq<Attribute>>);
+
+        pub enum GeneralName {
+            DNSName(SpecString),
+            DirectoryName(DistinguishedName),
+            IPAddr(Seq<u8>),
+            OtherName,
+            Unsupported,
+        }
+
+        pub enum SubjectKey {
+            RSA {
+                mod_length: usize,
+            },
+            DSA {
+                p_len: usize,
+                q_len: usize,
+                g_len: usize,
+            },
+            Other,
+        }
+
+        pub struct AuthorityKeyIdentifier {
+            pub critical: Option<bool>,
+            pub key_id: Option<SpecString>,
+            pub issuer: Option<SpecString>,
+            pub serial: Option<SpecString>,
+        }
+
+        pub struct SubjectKeyIdentifier {
+            pub critical: Option<bool>,
+            pub key_id: SpecString,
+        }
+
+        pub enum ExtendedKeyUsageType {
+            ServerAuth,
+            ClientAuth,
+            CodeSigning,
+            EmailProtection,
+            TimeStamping,
+            OCSPSigning,
+            Any,
+            Other(SpecString),
+        }
+
+        pub struct ExtendedKeyUsage {
+            pub critical: Option<bool>,
+            pub usages: Seq<ExtendedKeyUsageType>,
+        }
+
+        pub struct BasicConstraints {
+            pub critical: Option<bool>,
+            pub is_ca: bool,
+            pub path_len: Option<i64>,
+        }
+
+        pub struct KeyUsage {
+            pub critical: Option<bool>,
+            pub digital_signature: bool,
+            pub non_repudiation: bool,
+            pub key_encipherment: bool,
+            pub data_encipherment: bool,
+            pub key_agreement: bool,
+            pub key_cert_sign: bool,
+            pub crl_sign: bool,
+            pub encipher_only: bool,
+            pub decipher_only: bool,
+        }
+
+        pub struct SubjectAltName {
+            pub critical: Option<bool>,
+            pub names: Seq<GeneralName>,
+        }
+
+        pub struct NameConstraints {
+            pub critical: Option<bool>,
+            pub permitted: Seq<GeneralName>,
+            pub excluded: Seq<GeneralName>,
+        }
+
+        pub struct CertificatePolicies {
+            pub critical: Option<bool>,
+            pub policies: Seq<SpecString>,
+        }
+
+        pub struct AuthorityInfoAccess {
+            pub critical: Option<bool>,
+            // Other info is not encoded
+        }
+
+        pub struct SignatureAlgorithm {
+            pub id: SpecString,
+            pub bytes: SpecString,
+        }
+
+        pub struct Extension {
+            pub oid: SpecString,
+            pub critical: Option<bool>,
+        }
+
+        pub struct Certificate {
+            pub fingerprint: SpecString,
+            pub version: u32,
+            pub serial: SpecString,
+            pub sig_alg_outer: SignatureAlgorithm,
+            pub sig_alg_inner: SignatureAlgorithm,
+            pub not_after: u64,
+            pub not_before: u64,
+
+            pub issuer: DistinguishedName,
+            pub subject: DistinguishedName,
+            pub subject_key: SubjectKey,
+
+            pub issuer_uid: Option<SpecString>,
+            pub subject_uid: Option<SpecString>,
+
+            pub ext_authority_key_id: Option<AuthorityKeyIdentifier>,
+            pub ext_subject_key_id: Option<SubjectKeyIdentifier>,
+            pub ext_extended_key_usage: Option<ExtendedKeyUsage>,
+            pub ext_basic_constraints: Option<BasicConstraints>,
+            pub ext_key_usage: Option<KeyUsage>,
+            pub ext_subject_alt_name: Option<SubjectAltName>,
+            pub ext_name_constraints: Option<NameConstraints>,
+            pub ext_certificate_policies: Option<CertificatePolicies>,
+            pub ext_authority_info_access: Option<AuthorityInfoAccess>,
+
+            // All extensions without parameters
+            pub all_exts: Option<Seq<Extension>>,
+        }
+
+        pub enum Purpose {
+            ServerAuth,
+        }
+
+        pub struct Task {
+            pub hostname: Option<SpecString>,
+            pub purpose: Purpose,
+            pub now: u64,
+        }
+
+        pub enum PolicyError {
+            UnsupportedTask,
         }
     }
 }
