@@ -1,5 +1,5 @@
-#![allow(unused_parens)]
-#![allow(non_shorthand_field_patterns)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
 
 use vstd::prelude::*;
 use exec_spec::*;
@@ -33,7 +33,6 @@ mod test_exec_spec_struct {
     use super::*;
 
     exec_spec! {
-        #[allow(dead_code)]
         enum MyOption {
             Some(u32),
             None,
@@ -41,7 +40,6 @@ mod test_exec_spec_struct {
     }
 
     exec_spec! {
-        #[allow(dead_code)]
         pub struct S {
             a: u32,
             b: MyOption,
@@ -66,7 +64,6 @@ mod test_exec_spec_typing {
             s
         }
 
-        #[allow(dead_code)]
         struct S {
             b: SpecString,
         }
@@ -453,8 +450,6 @@ mod test_exec_spec_interop1 {
         }
     }
 
-    #[allow(dead_code)]
-    #[allow(unused_variables)]
     fn sanity_check() {
         reveal_with_fuel(test_all_positive, 3);
         assert(test_all_positive(seq![1, 2, 3], 0));
@@ -468,7 +463,6 @@ mod test_exec_spec_interop2 {
     use super::*;
 
     exec_spec! {
-        #[allow(dead_code)]
         struct A {
             a: u32,
             b: u32,
@@ -479,7 +473,6 @@ mod test_exec_spec_interop2 {
         }
     }
 
-    #[allow(dead_code)]
     fn sanity_check() {
         let a = ExecA { a: 3, b: 2 };
 
@@ -515,7 +508,6 @@ mod test_exec_spec_interop3 {
         }
     }
 
-    #[allow(dead_code)]
     fn test() {
         let a = ExecMyPair(vec![1, 2, 3], vec![0, 1, 2]);
 
@@ -715,6 +707,102 @@ mod test_certificate {
 
         pub enum PolicyError {
             UnsupportedTask,
+        }
+    }
+}
+
+/// Basic `forall` constraints
+mod test_forall_basic {
+    use super::*;
+
+    exec_spec! {
+        spec fn zero_vec(a: Seq<u32>) -> bool {
+            forall |i: usize| 0 <= i < a.len() ==> a[i as int] != 0
+        }
+    }
+
+    fn sanity_check() {
+        let v = vec![1, 2, 3];
+        if exec_zero_vec(&v) {
+            assert(v.deep_view()[0] != 0);
+        }
+    }
+}
+
+/// Basic `exists` constraints
+mod test_exists_basic {
+    use super::*;
+
+    exec_spec! {
+        spec fn non_zero_vec(a: Seq<u32>) -> bool {
+            exists |i: usize| 0 <= i < a.len() && a[i as int] != 0
+        }
+    }
+
+    fn sanity_check() {
+        let v = vec![1, 2, 3];
+        if exec_non_zero_vec(&v) {
+            assert(non_zero_vec(v.deep_view()));
+            assert(exists |i: usize| 0 <= i < v.deep_view().len() && v.deep_view()[i as int] != 0);
+        }
+    }
+}
+
+/// Nested `forall`s
+mod test_forall_nested {
+    use super::*;
+
+    exec_spec! {
+        spec fn distinct(a: Seq<u32>) -> bool {
+            forall |i: usize| #![trigger a[i as int]] 0 <= i < a.len() ==>
+            forall |j: usize| #![trigger a[j as int]] 0 <= j < i ==>
+                a[i as int] != a[j as int]
+        }
+    }
+
+    fn sanity_check(v: Vec<u32>) {
+        if exec_distinct(&v) {
+            assert(v.deep_view().len() >= 2 ==> v.deep_view()[0] != v.deep_view()[1]);
+        }
+    }
+}
+
+/// Nested `exists`
+mod test_exists_nested {
+    use super::*;
+
+    exec_spec! {
+        spec fn has_duplicate(a: Seq<u32>) -> bool {
+            exists |i: usize| #![trigger a[i as int]] 0 <= i < a.len() &&
+            exists |j: usize| #![trigger a[j as int]] 0 <= j < i &&
+                a[i as int] == a[j as int]
+        }
+    }
+
+    fn sanity_check(v: Vec<u32>) {
+        if exec_has_duplicate(&v) {
+            assert(v.deep_view().len() == 2 ==> v.deep_view()[0] == v.deep_view()[1]);
+        }
+    }
+}
+
+/// Alternating `forall` and `exists`
+mod test_forall_exists_alternating {
+    use super::*;
+
+    exec_spec! {
+        spec fn has_unique_maximum(a: Seq<u32>) -> bool {
+            exists |i: usize| #![trigger a[i as int]] 0 <= i < a.len() &&
+                forall |j: usize| #![trigger a[j as int]] 0 <= j < a.len() ==>
+                    i == j || a[i as int] > a[j as int]
+        }
+    }
+
+    fn sanity_check(v: Vec<u32>) {
+        if exec_has_unique_maximum(&v) {
+            assert(v.deep_view().len() == 2 ==>
+                v.deep_view()[0] > v.deep_view()[1] ||
+                v.deep_view()[0] < v.deep_view()[1]);
         }
     }
 }
