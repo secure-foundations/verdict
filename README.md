@@ -1,10 +1,13 @@
 Verified X.509 Certificate Validation
 ---
 
-This is the main repo of Verdict, a formally verified X.509 certificate validator.
+Verdict is an end-to-end formally verified X.509 certificate validation library.
+You can use Verdict to derive X.509 validators of your own policies, or use one of
+our formal models of X.509 policies in Chrome, Firefox, or OpenSSL.
 
 See also
-- Paper at USENIX Security 2025: [https://verdict.rs/paper](https://verdict.rs/paper).
+- Our paper at USENIX Security 2025: [https://verdict.rs/paper](https://verdict.rs/paper).
+- Documentation: [https://secure-foundations.github.io/verdict/verdict/index.html](https://secure-foundations.github.io/verdict/verdict/index.html).
 - Benchmarking harnesses: [https://github.com/secure-foundations/verdict-bench](https://github.com/secure-foundations/verdict-bench).
 
 ## Dependencies
