@@ -6,9 +6,9 @@ You can use Verdict to derive X.509 validators of your own policies, or use one 
 our formal models of X.509 policies in Chrome, Firefox, or OpenSSL.
 
 See also
-- Our paper at USENIX Security 2025: [https://verdict.rs/paper](https://verdict.rs/paper).
-- Documentation: [https://secure-foundations.github.io/verdict/verdict/index.html](https://secure-foundations.github.io/verdict/verdict/index.html).
-- Benchmarking harnesses: [https://github.com/secure-foundations/verdict-bench](https://github.com/secure-foundations/verdict-bench).
+- Our paper at USENIX Security 2025: [https://verdict.rs/paper](https://verdict.rs/paper)
+- Documentation: [https://secure-foundations.github.io/verdict/verdict/index.html](https://secure-foundations.github.io/verdict/verdict/index.html)
+- Benchmarking harnesses: [https://github.com/secure-foundations/verdict-bench](https://github.com/secure-foundations/verdict-bench)
 
 ## Dependencies
 
